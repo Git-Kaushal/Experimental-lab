@@ -31,7 +31,9 @@ details{margin-top:24px;color:var(--mut);font-size:14px;line-height:1.6}pre{over
 <script>
 var LABS=[
 {t:'KMnO₄ Redox Lab',f:'kmno4-lab.html',d:'Permanganate with acid (Mn²⁺), alkali (green → brown MnO₂) and oxalic acid with a Bunsen burner and a tetrahedral MnO₄⁻ model.',tags:['Chemistry','Redox'],s:'Live'},
-{t:'Sri Chakra · Meru',f:'sri-chakra.html',d:'The nine layers of the Sri Chakra rising from the gate to the bindu. Tap a layer or take the guided tour.',tags:['Culture','Geometry'],s:'Live'}
+{t:'Sri Chakra · Meru',f:'sri-chakra.html',d:'The nine layers of the Sri Chakra rising from the gate to the bindu. Tap a layer or take the guided tour.',tags:['Culture','Geometry'],s:'Live'},
+{t:'HTML → 3D / VR / AR Studio',f:'xr-studio.html',d:'Paste HTML and turn each block into a floating 3D layer. View it in 3D, VR or AR, and load your own Blender .glb model.',tags:['Tools','Web'],s:'Live'},
+{t:'Math to Deep Learning',f:'math-deep-learning.html',d:'Module 1: a live slope lab (y = mx + b). Module 8: forward propagation through a small neural network.',tags:['Math','AI'],s:'Live'}
 ];
 var ALLOW='xr-spatial-tracking; gamepad; fullscreen; accelerometer; gyroscope',cur='All',g=document.getElementById('grid'),c=document.getElementById('chips');
 function tags(){var t=['All'];LABS.forEach(function(l){l.tags.concat(l.s==='Archive'?['Archive']:[]).forEach(function(x){if(t.indexOf(x)<0)t.push(x)})});return t}
