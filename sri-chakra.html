@@ -31,6 +31,8 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
 .btn.pri{border-color:var(--ac);color:var(--ac);font-weight:600}.btn.on{background:var(--ac);color:#fff}
 #eq{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.5}
 #eq small{opacity:.75}
+.a-enter-vr,.a-enter-ar{display:none!important}
+@media(max-width:600px){.btn{padding:7px 10px;font-size:13px}#eq{font-size:13px;padding:8px 10px}}
 </style></head><body>
 <div id="bar"></div><div id="eq"></div>
 <a-scene id="scene" vr-mode-ui="enabled:false" renderer="antialias:true;alpha:true" webxr="optionalFeatures:local-floor,hit-test">
@@ -43,7 +45,7 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
   <a-text id="info" value="" position="0 2.0 -1.6" align="center" width="2.6" color="#fde68a"></a-text>
   <a-text id="sub" value="" position="0 1.82 -1.6" align="center" width="2.6" color="#94a3b8"></a-text>
   <a-entity id="wb"></a-entity>
-  <a-camera position="0 1.5 0.4" look-controls wasd-controls cursor="rayOrigin:mouse" raycaster="objects:.clickable"><a-entity id="gaze" visible="false" cursor="fuse:true;fuseTimeout:1200" raycaster="objects:.clickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.012;radiusOuter:0.022" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true" animation__fuse="property:scale;startEvents:fusing;from:1 1 1;to:0.3 0.3 0.3;dur:1200" animation__leave="property:scale;startEvents:mouseleave;to:1 1 1;dur:150"></a-entity></a-camera>
+  <a-camera id="cam" position="0 1.5 0.4" look-controls wasd-controls cursor="rayOrigin:mouse" raycaster="objects:.clickable"><a-entity id="gaze" visible="false" cursor="fuse:true;fuseTimeout:1200" raycaster="objects:.clickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.012;radiusOuter:0.022" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true" animation__fuse="property:scale;startEvents:fusing;from:1 1 1;to:0.3 0.3 0.3;dur:1200" animation__leave="property:scale;startEvents:mouseleave;to:1 1 1;dur:150"></a-entity></a-camera>
   <a-entity laser-controls="hand:right" raycaster="objects:.clickable;far:6"></a-entity>
 </a-scene>
 <script>
@@ -85,7 +87,7 @@ function paint(){Ls.forEach(function(l){var on=l.i===cur;l.items.forEach(functio
   e.setAttribute('material','color:'+(on?'#ffffff':l.col)+';shader:flat;opacity:'+((cur<0||on)?1:.4)+';transparent:true');
   if(e.tagName==='A-BOX'){var w=on?.03:.014;e.setAttribute('height',w);e.setAttribute('depth',w)}})})}
 function pick(i){cur=i;paint();var l=Ls[i];
-  if(!l){$('info').setAttribute('value','Sri Chakra · Meru');$('sub').setAttribute('value','Tap a ring, or use the numbers and Next');
+  if(!l){$('info').setAttribute('value','Sri Chakra · Meru');$('sub').setAttribute('value','Tap a ring or press a number');
     $('eq').innerHTML='<b>Sri Chakra.</b> Nine layers (avaranas) rise from the outer gate to the central point, like a stepped Meru. Tap a layer or use the number buttons.<br><small>Stylized 3D model: names follow the traditional nine avaranas, but the exact classical construction of the small triangles is more intricate.</small>';return}
   $('info').setAttribute('value',(i+1)+'. '+l.name);$('sub').setAttribute('value',l.sk);
   $('eq').innerHTML='<b>'+(i+1)+'. '+l.name+'</b> · '+l.sk+'<br>'+l.txt+'<br><small>Stylized model; see the note on the first screen.</small>'}
@@ -102,8 +104,10 @@ var vr=document.createElement('button');vr.className='btn';vr.textContent='Enter
 var ar=document.createElement('button');ar.className='btn';ar.textContent='Enter AR';
 ar.onclick=function(){if(typeof scene.enterAR!=='function'){alert('3D engine not ready. Reload in Chrome.');return}if(!navigator.xr){alert('AR needs Chrome on an ARCore phone (like Pixel) over HTTPS.');return}try{scene.enterAR()}catch(e){alert('AR could not start: '+e.message)}};$('bar').appendChild(ar);
 function room(v){['sky','floor'].forEach(function(i){$(i).setAttribute('visible',v)})}
-scene.addEventListener('enter-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',true);room(!scene.is('ar-mode'))});scene.addEventListener('exit-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',false);room(true)});
+scene.addEventListener('enter-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',true);$('cam').setAttribute('position','0 1.5 0.4');room(!scene.is('ar-mode'))});scene.addEventListener('exit-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',false);fit();room(true)});
 $('spin').setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:40000;easing:linear');tb();pick(-1);
+var cam=$('cam');function fit(){if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,z=Math.max(.4,Math.min(3.6,-1.6+1.35/(.839*a)));cam.setAttribute('position','0 1.5 '+z.toFixed(2))}
+addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});fit();
 }
 (function w(n){var s=document.getElementById('scene');if(window.AFRAME&&s&&typeof s.enterAR==='function'){boot();return}if(n>100){if(window.AFRAME){boot();return}document.getElementById('eq').innerHTML='<b>The 3D engine could not load.</b> Open this page in Chrome and reload.';return}setTimeout(function(){w(n+1)},100)})(0);
 </script></body></html>
