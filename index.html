@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visual Labs · 3D / VR / AR</title>
+<style>
+:root{--fg:#0f172a;--mut:#475569;--ac:#0369a1;--line:#cbd5e1;--bg:#f1f5f9;--card:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#e2e8f0;--mut:#94a3b8;--ac:#38bdf8;--line:#334155;--bg:#0b1020;--card:#111a33}}
+:root[data-theme="dark"]{--fg:#e2e8f0;--mut:#94a3b8;--ac:#38bdf8;--line:#334155;--bg:#0b1020;--card:#111a33}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px}
+h1{margin:0 0 4px;font-size:26px}p.s{margin:0 0 16px;color:var(--mut)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip,.b{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-block}
+.chip.on,.b.pri{border-color:var(--ac);color:var(--ac);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h2{margin:0 0 6px;font-size:18px}.card p{margin:0 0 10px;color:var(--mut);font-size:14px;line-height:1.5}
+.tag{font-size:12px;color:var(--mut);margin-right:8px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.b{border-radius:10px;padding:7px 12px}iframe{width:100%;height:320px;border:1px solid var(--line);border-radius:10px;margin-top:10px}
+details{margin-top:24px;color:var(--mut);font-size:14px;line-height:1.6}pre{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px}
+</style></head><body><main>
+<h1>Visual Labs</h1>
+<p class="s">Interactive 3D experiments. Open one full screen, or use Enter AR / Enter VR inside a lab on a supported device.</p>
+<div class="chips" id="chips"></div><div class="grid" id="grid"></div>
+<details><summary><b>Add a new lab</b></summary>
+<p>1) Upload the lab file (for example <code>my-lab.html</code>) to the same folder as this page.<br>2) Add a line to the <code>LABS</code> list near the bottom of this page's source:</p>
+<pre>{t:'Title',f:'my-lab.html',d:'One-line description',tags:['Chemistry'],s:'Live'}</pre>
+<p>Use <b>s:'Archive'</b> for previously executed experiments. Keep every lab as a single self-contained HTML file and serve the site over HTTPS (needed for AR).</p></details>
+</main>
+<script>
+var LABS=[
+{t:'KMnO₄ Redox Lab',f:'kmno4-lab.html',d:'Permanganate with acid (Mn²⁺), alkali (green → brown MnO₂) and oxalic acid with a Bunsen burner and a tetrahedral MnO₄⁻ model.',tags:['Chemistry','Redox'],s:'Live'},
+{t:'Sri Chakra · Meru',f:'sri-chakra.html',d:'The nine layers of the Sri Chakra rising from the gate to the bindu. Tap a layer or take the guided tour.',tags:['Culture','Geometry'],s:'Live'}
+];
+var ALLOW='xr-spatial-tracking; gamepad; fullscreen; accelerometer; gyroscope',cur='All',g=document.getElementById('grid'),c=document.getElementById('chips');
+function tags(){var t=['All'];LABS.forEach(function(l){l.tags.concat(l.s==='Archive'?['Archive']:[]).forEach(function(x){if(t.indexOf(x)<0)t.push(x)})});return t}
+function chips(){c.innerHTML='';tags().forEach(function(t){var b=document.createElement('button');b.className='chip'+(t===cur?' on':'');b.textContent=t;b.onclick=function(){cur=t;chips();draw()};c.appendChild(b)})}
+function embed(l){return '<iframe src="'+l.f+'" width="100%" height="600" allow="'+ALLOW+'"></iframe>'}
+function draw(){g.innerHTML='';LABS.filter(function(l){return cur==='All'||l.tags.indexOf(cur)>=0||(cur==='Archive'&&l.s==='Archive')}).forEach(function(l){
+  var d=document.createElement('div');d.className='card';
+  d.innerHTML='<h2></h2><p></p><div></div><div class="acts"></div>';
+  d.querySelector('h2').textContent=l.t;d.querySelector('p').textContent=l.d;
+  d.children[2].innerHTML=l.tags.map(function(t){return '<span class="tag">#'+t+'</span>'}).join('')+'<span class="tag">'+l.s+'</span>';
+  var a=d.querySelector('.acts'),open=document.createElement('a');open.className='b pri';open.href=l.f;open.textContent='Open lab';a.appendChild(open);
+  var pv=document.createElement('button');pv.className='b';pv.textContent='Preview';var fr=null;
+  pv.onclick=function(){if(fr){fr.remove();fr=null;pv.textContent='Preview'}else{fr=document.createElement('iframe');fr.setAttribute('allow',ALLOW);fr.src=l.f;d.appendChild(fr);pv.textContent='Close preview'}};a.appendChild(pv);
+  var cp=document.createElement('button');cp.className='b';cp.textContent='Copy embed code';
+  cp.onclick=function(){var t=embed(l);function ok(){cp.textContent='Copied';setTimeout(function(){cp.textContent='Copy embed code'},1500)}
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,function(){prompt('Copy:',t)});else prompt('Copy:',t)};a.appendChild(cp);
+  g.appendChild(d)})}
+chips();draw();
+</script></body></html>
