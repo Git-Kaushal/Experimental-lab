@@ -27,6 +27,7 @@ remove:function(){this.el.removeObject3D('text')}});})();
 :root{--panel:rgba(255,255,255,.88);--fg:#0f172a;--ac:#0369a1;--line:#cbd5e1}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--panel:rgba(15,23,42,.85);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}}
 :root[data-theme="dark"]{--panel:rgba(15,23,42,.85);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}
+#pn{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(430px,calc(100% - 20px));max-height:42vh;overflow:auto;z-index:6;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.5}#pn .r{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0}#pn input[type=number]{width:62px}#pn input[type=range]{width:110px}
 html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 #ui{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
 #ui>*{pointer-events:auto}
@@ -104,13 +105,13 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
     'hid-1':[0,0.8,0],'hid-2':[0,0,0],'hid-3':[0,-0.8,0],
     'out-1':[0.6,0,-0.8]
   };
-  var col = function(k){return k.indexOf('in')===0?'#3498DB':k.indexOf('hid')===0?'#9B59B6':'#E74C3C';};
+  var E8=[];var col = function(k){return k.indexOf('in')===0?'#3498DB':k.indexOf('hid')===0?'#9B59B6':'#E74C3C';};
   Object.keys(N).forEach(function(k){
     make('a-sphere', {radius:'0.09', color:col(k), position:N[k].join(' ')}, pivot);
   });
   [['in-1','hid-1'],['in-1','hid-2'],['in-1','hid-3'],['in-2','hid-1'],['in-2','hid-2'],['in-2','hid-3'],
    ['hid-1','out-1'],['hid-2','out-1'],['hid-3','out-1']].forEach(function(c,i){
-    line(pivot, N[c[0]], N[c[1]], i%2?'#27AE60':'#2ECC71', 0.35+0.07*i);
+    E8[i]=line(pivot, N[c[0]], N[c[1]], i%2?'#27AE60':'#2ECC71', 0.35+0.07*i);
   });
   make('a-text', {value:'Input', position:'-0.6 0.85 0.8', align:'center', width:'1.6', color:'#3498DB'}, pivot);
   make('a-text', {value:'Hidden', position:'0 1.05 0', align:'center', width:'1.6', color:'#9B59B6'}, pivot);
@@ -121,12 +122,49 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
 
   function lerp(a,b,t){return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t].join(' ');}
 
-  /* ---------- Animation loop ---------- */
+  
+var P={auto:true,m:1,b:0},A={x:[1,.5],W:[[.8,-.5,.3],[.2,.9,-.7]],b:[0,.1,-.1],V:[.6,-.4,.9],c:.05,act:'relu'};
+var PR=[['in-1','hid-1'],['in-1','hid-2'],['in-1','hid-3'],['in-2','hid-1'],['in-2','hid-2'],['in-2','hid-3'],['hid-1','out-1'],['hid-2','out-1'],['hid-3','out-1']];
+var TV={};Object.keys(N).forEach(function(k){TV[k]=make('a-text',{value:'',position:N[k][0]+' '+(N[k][1]-.17)+' '+N[k][2],align:'center',width:'0.8',color:'#ffffff'},pivot)});
+function f2(v){return v.toFixed(2)}
+function fa(z){return A.act==='relu'?Math.max(0,z):A.act==='tanh'?Math.tanh(z):1/(1+Math.exp(-z))}
+function nn(){var h=[0,1,2].map(function(j){var z=A.x[0]*A.W[0][j]+A.x[1]*A.W[1][j]+A.b[j];return[z,fa(z)]}),y=h[0][1]*A.V[0]+h[1][1]*A.V[1]+h[2][1]*A.V[2]+A.c;
+ var ws=[A.W[0][0],A.W[0][1],A.W[0][2],A.W[1][0],A.W[1][1],A.W[1][2],A.V[0],A.V[1],A.V[2]];
+ PR.forEach(function(c,i){E8[i].setAttribute('line','start: '+N[c[0]].join(' ')+'; end: '+N[c[1]].join(' ')+'; color: '+(ws[i]>=0?'#2ECC71':'#E74C3C')+'; opacity: '+Math.min(1,.2+Math.abs(ws[i])*.7))});
+ TV['in-1'].setAttribute('value','x1='+f2(A.x[0]));TV['in-2'].setAttribute('value','x2='+f2(A.x[1]));
+ h.forEach(function(q,j){TV['hid-'+(j+1)].setAttribute('value','h'+(j+1)+'='+f2(q[1]))});TV['out-1'].setAttribute('value','y='+f2(y));
+ return{h:h,y:y}}
+var pn=document.createElement('div');pn.id='pn';document.body.appendChild(pn);
+var pb=document.createElement('button');pb.className='btn';pb.textContent='Controls';pb.onclick=function(){pn.style.display=pn.style.display==='none'?'block':'none'};document.getElementById('ui').appendChild(pb);
+function num(lab,get,set,rng){var l=document.createElement('label');l.textContent=lab+' ';var i=document.createElement('input');i.type='number';i.step='0.1';i.value=get();var r=null;
+ i.oninput=function(){var v=parseFloat(i.value);if(!isNaN(v)){set(v);if(r)r.value=v;upd()}};l.appendChild(i);
+ if(rng){r=document.createElement('input');r.type='range';r.min=-3;r.max=3;r.step=.1;r.value=get();r.oninput=function(){i.value=r.value;set(parseFloat(r.value));upd()};l.appendChild(r)}return l}
+function row(){var d=document.createElement('div');d.className='r';[].slice.call(arguments).forEach(function(e){d.appendChild(e)});return d}
+function build(){pn.innerHTML='';
+ if(current===1){var c=document.createElement('label'),k=document.createElement('input');k.type='checkbox';k.checked=P.auto;k.onchange=function(){P.auto=k.checked};c.appendChild(k);c.appendChild(document.createTextNode(' Auto-animate the slope'));
+  pn.appendChild(row(c));
+  pn.appendChild(row(num('slope m',function(){return P.m},function(v){P.auto=false;k.checked=false;P.m=v},1)));
+  pn.appendChild(row(num('intercept b',function(){return P.b},function(v){P.auto=false;k.checked=false;P.b=v},1)));
+ }else{
+  pn.appendChild(row(num('x1',function(){return A.x[0]},function(v){A.x[0]=v}),num('x2',function(){return A.x[1]},function(v){A.x[1]=v})));
+  [0,1].forEach(function(i){pn.appendChild(row.apply(null,[0,1,2].map(function(j){return num('w'+(i+1)+(j+1),function(){return A.W[i][j]},function(v){A.W[i][j]=v})})))});
+  pn.appendChild(row.apply(null,[0,1,2].map(function(j){return num('b'+(j+1),function(){return A.b[j]},function(v){A.b[j]=v})})));
+  pn.appendChild(row.apply(null,[0,1,2].map(function(j){return num('v'+(j+1),function(){return A.V[j]},function(v){A.V[j]=v})}).concat([num('c',function(){return A.c},function(v){A.c=v})])));
+  var s=document.createElement('select');['relu','sigmoid','tanh'].forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;s.appendChild(o)});s.value=A.act;s.onchange=function(){A.act=s.value;upd()};
+  pn.appendChild(row(document.createTextNode('Hidden activation '),s));
+ }
+ var od=document.createElement('div');od.id='po';pn.appendChild(od);upd()}
+function upd(){var od=document.getElementById('po');
+ if(current===1){if(od)od.innerHTML='y = m·x + b. Type numbers or drag the sliders; the yellow line follows.';return}
+ var r=nn();if(od)od.innerHTML=r.h.map(function(q,j){return 'z'+(j+1)+' = '+f2(A.x[0])+'×'+f2(A.W[0][j])+' + '+f2(A.x[1])+'×'+f2(A.W[1][j])+' + '+f2(A.b[j])+' = '+f2(q[0])+' → h'+(j+1)+' = '+A.act+'('+f2(q[0])+') = '+f2(q[1])}).join('<br>')+
+ '<br><b>ŷ</b> = Σ vj·hj + c = '+f2(A.V[0])+'×'+f2(r.h[0][1])+' + '+f2(A.V[1])+'×'+f2(r.h[1][1])+' + '+f2(A.V[2])+'×'+f2(r.h[2][1])+' + '+f2(A.c)+' = <b>'+f2(r.y)+'</b><br><small>Green lines = positive weights, red = negative. Output layer is linear.</small>'}
+nn();setTimeout(build,0);
+/* ---------- Animation loop ---------- */
   var t = 0, prog = 0, current = 1;
   function frame(){
     t += 0.02;
     if (current === 1) {
-      var m = Math.sin(t) * 1.2, b = 0;
+      var m = P.auto?Math.sin(t)*1.2:P.m, b = P.auto?0:P.b;
       var y0 = m*-0.8+b, y1 = m*0.8+b;
       sl.setAttribute('line', 'start: -0.8 '+y0+' 0; end: 0.8 '+y1+' 0; color: #F1C40F');
       pa.setAttribute('position', '-0.8 '+y0+' 0');
@@ -145,7 +183,7 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
 
   /* ---------- Module switching ---------- */
   function show(n){
-    current = n;
+    current = n;build();
     m1.setAttribute('visible', n===1);
     m8.setAttribute('visible', n===8);
     document.getElementById('b1').classList.toggle('on', n===1);

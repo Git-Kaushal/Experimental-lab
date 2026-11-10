@@ -33,6 +33,7 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
 .btn.on{background:var(--ac);color:#fff}
 #eq{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.5}
 #eq small{opacity:.75}
+#rp{position:fixed;right:10px;top:calc(120px + env(safe-area-inset-top,0px));width:min(380px,calc(100% - 20px));max-height:50vh;overflow:auto;z-index:6;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;display:none}#rp table{border-collapse:collapse;width:100%}#rp td{border-top:1px solid var(--line);padding:3px 6px}#rp select{font-size:13px;max-width:100%}#rp details{margin:4px 0}
 .a-enter-vr,.a-enter-ar{display:none!important}
 @media(max-width:600px){.btn{padding:7px 10px;font-size:13px}#eq{font-size:13px;padding:8px 10px}}
 </style></head><body>
@@ -114,7 +115,7 @@ function tween(c,o,ms,tk,done){
     if(u<1)requestAnimationFrame(st);else if(done)done();
   })(t0);
 }
-function mn(col,txt){$('mnS').setAttribute('color',col);$('mnT').setAttribute('value',txt)}
+function mn(col,txt){$('mnS').setAttribute('color',col);$('mnT').setAttribute('value',txt);var m=/Mn \+(\d)/.exec(txt);if(m&&$('os'))$('os').textContent='+'+m[1]}
 function say(t,e,h){$('info').setAttribute('value',t);$('eq3d').setAttribute('value',e);$('eq').innerHTML=h}
 function drops(x,color,done){
   for(var i=0;i<4;i++)(function(i){setTimeout(function(){
@@ -132,12 +133,40 @@ function timer(tk){
   var t0=performance.now();clearInterval(tI);
   tI=setInterval(function(){var s=$('tm');if(tk!==token||!s){clearInterval(tI);return}s.textContent=((performance.now()-t0)/1000).toFixed(1)},100);
 }
+
+var RX={
+acid:{n:'Acid medium · Fe²⁺ (Mn +7 → +2)',eq:'MnO₄⁻ + 8H⁺ + 5Fe²⁺ → Mn²⁺ + 5Fe³⁺ + 4H₂O',
+ h:['Reduction: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O','Oxidation (×5): Fe²⁺ → Fe³⁺ + e⁻','Charge check: +17 = +17'],
+ os:[['Mn','+7','+2','gains 5 e⁻ · reduced · oxidising agent'],['Fe','+2','+3','loses 1 e⁻ each · oxidised · reducing agent']],
+ obs:['Deep purple fades to almost colorless.','Acid is needed: H⁺ takes part in the half-reaction.'],
+ q:[['Which species is the oxidising agent?','MnO₄⁻, because Mn goes from +7 to +2.'],['How many Fe²⁺ ions does one MnO₄⁻ oxidise?','Five: it gains 5 electrons and each Fe²⁺ gives 1.'],['Why is the product nearly colorless?','Mn²⁺ is only very faintly pink in dilute solution.']]},
+base:{n:'Alkaline medium · sulfite (Mn +7 → +6 → +4)',eq:'Strong alkali: 2MnO₄⁻ + SO₃²⁻ + 2OH⁻ → 2MnO₄²⁻ + SO₄²⁻ + H₂O',
+ h:['Weaker alkali / neutral: 2MnO₄⁻ + 3SO₃²⁻ + H₂O → 2MnO₂ + 3SO₄²⁻ + 2OH⁻','Half-reaction: MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻','Charge checks: −6 = −6 and −8 = −8'],
+ os:[['Mn','+7','+6','1 e⁻ gained (green MnO₄²⁻)'],['Mn','+7','+4','3 e⁻ gained (brown MnO₂)'],['S','+4','+6','sulfite is oxidised to sulfate']],
+ obs:['Purple turns green (manganate).','Then a brown precipitate of MnO₂ forms.','The demo shows the two outcomes one after the other for teaching.'],
+ q:[['What is the oxidation state of Mn in green manganate?','+6.'],['Which oxidation state gives the brown solid?','Mn +4, in MnO₂.'],['Why does sulfite appear in both equations?','It is the reducing agent: S goes from +4 to +6.']]},
+ox:{n:'Oxalic acid · autocatalytic (Mn +7 → +2)',eq:'2MnO₄⁻ + 5H₂C₂O₄ + 6H⁺ → 2Mn²⁺ + 10CO₂ + 8H₂O',
+ h:['Reduction (×2): MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O','Oxidation (×5): H₂C₂O₄ → 2CO₂ + 2H⁺ + 2e⁻','Electrons: 10 gained = 10 lost'],
+ os:[['Mn','+7','+2','gains 5 e⁻ each'],['C','+3','+4','each C loses 1 e⁻ (10 C in total)']],
+ obs:['Purple fades slowly at first, then quickly.','CO₂ bubbles rise.','Heating shortens the delay.'],
+ q:[['Why does the reaction speed up after a delay?','Mn²⁺ formed in the reaction acts as a catalyst (autocatalysis).'],['What gas bubbles off?','Carbon dioxide, CO₂.'],['How many oxalic acid molecules react with 2 MnO₄⁻?','Five.']]}};
+var rp=document.createElement('div');rp.id='rp';document.body.appendChild(rp);
+function sel(k){var r=RX[k];
+ rp.innerHTML='<b>Lab notes</b> <select id="rs">'+Object.keys(RX).map(function(x){return '<option value="'+x+'"'+(x===k?' selected':'')+'>'+RX[x].n+'</option>'}).join('')+'</select> <button class="btn" id="rr">Run</button>'+
+ '<p><b>Balanced equation</b><br>'+r.eq+'<br><small>'+r.h.join('<br>')+'</small></p>'+
+ '<p><b>Oxidation states</b> · live Mn in the beaker: <b id="os">+7</b></p><table>'+r.os.map(function(o){return '<tr><td>'+o[0]+'</td><td>'+o[1]+' → '+o[2]+'</td><td>'+o[3]+'</td></tr>'}).join('')+'</table>'+
+ '<p><b>Observations</b></p><ul>'+r.obs.map(function(o){return '<li>'+o+'</li>'}).join('')+'</ul><p><b>Questions</b> (tap to reveal)</p>'+
+ r.q.map(function(q){return '<details><summary>'+q[0]+'</summary>'+q[1]+'</details>'}).join('');
+ $('rs').onchange=function(){sel(this.value)};
+ $('rr').onclick=function(){({acid:acid,base:base,ox:oxalic})[$('rs').value]()}}
+var nb=document.createElement('button');nb.className='btn pri';nb.textContent='Lab notes';nb.onclick=function(){rp.style.display=rp.style.display==='block'?'none':'block'};$('bar').appendChild(nb);
+sel('acid');
 var HOME='<b>Virtual KMnO₄ lab.</b> Choose a reaction. Tap bottles to learn what they hold; “Heat” lights the Bunsen burner.<br><small>Virtual demo only. Real permanganate reactions need supervision and eye protection.</small>';
 function reset(){token++;busy=false;clearInterval(tI);cur={c:PURPLE.slice(),o:.85};paint();
   mn('#7a1fa2','MnO4-  ·  Mn +7 (purple)');say('Choose a reaction','',HOME)}
 
 function acid(){
-  if(busy)return;reset();busy=true;var tk=token;
+  if(busy)return;sel("acid");reset();busy=true;var tk=token;
   say('Adding acidified Fe2+ ...','','<b>Acid medium:</b> adding H₂SO₄ + FeSO₄…');
   drops(-.85,'#fde68a',function(){
     tween([225,215,230],.3,3500,tk,function(){
@@ -146,7 +175,7 @@ function acid(){
         '<b>Acid medium (Mn +7 → +2):</b><br>MnO₄⁻ + 8H⁺ + 5Fe²⁺ → Mn²⁺ + 5Fe³⁺ + 4H₂O<br><small>Purple → near colorless.</small>');busy=false})})
 }
 function base(){
-  if(busy)return;reset();busy=true;var tk=token;
+  if(busy)return;sel("base");reset();busy=true;var tk=token;
   say('Adding alkaline sulfite ...','','<b>Alkaline medium:</b> adding NaOH + Na₂SO₃…');
   drops(.6,'#93c5fd',function(){
     tween([27,127,59],.85,2200,tk,function(){
@@ -158,7 +187,7 @@ function base(){
           say('Brown solid: MnO2 precipitate (Mn +4)','MnO4- + 2H2O + 3e- -> MnO2 + 4OH-','<b>Step 2 (Mn +7 → +4):</b><br>MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻ <small>(brown precipitate)</small>');busy=false})},1500)})})
 }
 function oxalic(){
-  if(busy)return;reset();busy=true;var tk=token;
+  if(busy)return;sel("ox");reset();busy=true;var tk=token;
   say('Adding oxalic acid + H2SO4 ...','','<b>Oxalic acid titration-style reaction:</b> adding H₂C₂O₄ + H₂SO₄' + (hot?' (heated ~60 °C)':' (room temperature, slow start)') + '…');
   drops(-.5,'#e5e7eb',function(){
     var d1=hot?1200:5000,d2=hot?1000:2000;
