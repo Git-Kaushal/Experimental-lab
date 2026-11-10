@@ -22,103 +22,183 @@ this.mesh.position.x=d.anchor==='left'?d.width/2:d.anchor==='right'?-d.width/2:0
 remove:function(){this.el.removeObject3D('text')}});})();
 </script>
 <style>
-:root{--panel:rgba(255,255,255,.92);--fg:#0f172a;--ac:#0369a1;--line:#cbd5e1;--bg:#f1f5f9;--card:#ffffff}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--panel:rgba(15,23,42,.9);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155;--bg:#0b1020;--card:#111a33}}
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-#bar{position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:5;display:flex;gap:6px;flex-wrap:wrap}
-.btn{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:14px;cursor:pointer}
-.btn.pri{border-color:var(--ac);color:var(--ac);font-weight:600}.btn.on{background:var(--ac);color:#fff}
-#eq{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.5}
-#eq small{opacity:.75}
-.a-enter-vr,.a-enter-ar{display:none!important}
-@media(max-width:600px){.btn{padding:7px 10px;font-size:13px}#eq{font-size:13px;padding:8px 10px}}
-</style></head><body>
-<div id="bar"></div><div id="eq"></div>
-<a-scene id="scene" vr-mode-ui="enabled:false" renderer="antialias:true;alpha:true" webxr="optionalFeatures:local-floor,hit-test">
-  <a-sky id="sky" color="#0b1020"></a-sky>
-  <a-plane id="floor" rotation="-90 0 0" width="12" height="12" position="0 0 -2" color="#111a33"></a-plane>
-  <a-entity light="type:ambient;intensity:0.5"></a-entity>
-  <a-entity light="type:directional;intensity:0.5" position="1 4 2"></a-entity>
-  <a-cylinder position="0 0.42 -1.6" radius="0.8" height="0.84" color="#3b2a1a"></a-cylinder>
-  <a-entity id="spin" position="0 0.86 -1.6"><a-entity id="yan" rotation="-90 0 0" scale="0.55 0.55 0.55"></a-entity></a-entity>
-  <a-text id="info" value="" position="0 2.45 -1.6" align="center" width="2.6" color="#fde68a"></a-text>
-  <a-text id="sub" value="" position="0 2.28 -1.6" align="center" width="2.6" color="#94a3b8"></a-text>
-  <a-entity id="wb"></a-entity>
-  <a-camera id="cam" position="0 1.5 0.4" look-controls wasd-controls cursor="rayOrigin:mouse" raycaster="objects:.clickable"><a-entity id="gaze" visible="false" cursor="fuse:true;fuseTimeout:1200" raycaster="objects:.clickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.012;radiusOuter:0.022" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true" animation__fuse="property:scale;startEvents:fusing;from:1 1 1;to:0.3 0.3 0.3;dur:1200" animation__leave="property:scale;startEvents:mouseleave;to:1 1 1;dur:150"></a-entity></a-camera>
-  <a-entity laser-controls="hand:right" raycaster="objects:.clickable;far:6"></a-entity>
-</a-scene>
-<script>
-function boot(){
-var $=function(i){return document.getElementById(i)},scene=$('scene');
-function mk(t,a,p){var e=document.createElement(t);for(var k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e}
-var D=[
-['Bhupura','Trailokya Mohana','The square outer frame with four gates: the earthly boundary of the yantra.','#fbbf24'],
-['16-petal lotus','Sarvasa Paripuraka','A ring of sixteen petals around the inner figure.','#f472b6'],
-['8-petal lotus','Sarva Sankshobhana','A ring of eight petals; the three circles sit just inside it.','#fb7185'],
-['Outer triangles','Sarva Saubhagyadayaka','The outermost band of triangles (14 small triangles in the classical form).','#f59e0b'],
-['10 outer triangles','Sarvarthasadhaka','The first of the two ten-triangle bands.','#fb923c'],
-['10 inner triangles','Sarvarakshakara','The second ten-triangle band.','#f87171'],
-['8 triangles','Sarvarogahara','The eight-triangle band close to the center.','#e879f9'],
-['Central triangle','Sarvasiddhiprada','The inmost triangle, holding the bindu.','#fcd34d'],
-['Bindu','Sarvanandamaya','The central point: in tradition, the source and unity of the whole yantra.','#ffffff']];
-var Ls=D.map(function(d,i){return{i:i,name:d[0],sk:d[1],txt:d[2],col:d[3],items:[],z:i*.06}}),cur=-1,tour=null,spinOn=true;
-function seg(a,b,z,l){var dx=b[0]-a[0],dy=b[1]-a[1],n=Math.sqrt(dx*dx+dy*dy);if(n<1e-4)return;
-  var e=mk('a-box',{class:'clickable',position:((a[0]+b[0])/2)+' '+((a[1]+b[1])/2)+' '+z,rotation:'0 0 '+(Math.atan2(dy,dx)*57.2958),width:n,height:.014,depth:.014,material:'color:'+l.col+';shader:flat'},$('yan'));
-  e._xy=[(a[0]+b[0])/2,(a[1]+b[1])/2];l.items.push(e);e.addEventListener('click',function(){pick(l.i)})}
-function poly(p,z,l,c){for(var i=0;i<p.length-(c?0:1);i++)seg(p[i],p[(i+1)%p.length],z,l)}
-function circ(r,z,l){var p=[];for(var i=0;i<48;i++){var a=i/48*6.2832;p.push([r*Math.cos(a),r*Math.sin(a)])}poly(p,z,l,true)}
-function petals(n,r0,r1,z,l){circ(r0,z,l);var h=3.1416/n*.9;for(var i=0;i<n;i++){var a=i/n*6.2832;
-  poly([[r0*Math.cos(a-h),r0*Math.sin(a-h)],[r1*Math.cos(a),r1*Math.sin(a)],[r0*Math.cos(a+h),r0*Math.sin(a+h)]],z,l,false)}}
-function rot(p,k){var c=[1,0,-1,0][k],s=[0,1,0,-1][k];return[p[0]*c-p[1]*s,p[0]*s+p[1]*c]}
-function tri(t,l){var s=.8;poly([[0,t[0]*s],[-t[2]*s,t[1]*s],[t[2]*s,t[1]*s]],l.z,l,true)}
-/* 1 Bhupura */
-poly([[-1.3,-1.3],[1.3,-1.3],[1.3,1.3],[-1.3,1.3]],0,Ls[0],true);poly([[-1.22,-1.22],[1.22,-1.22],[1.22,1.22],[-1.22,1.22]],0,Ls[0],true);
-for(var k=0;k<4;k++)poly([[1.3,.15],[1.42,.15],[1.42,-.15],[1.3,-.15]].map(function(p){return rot(p,k)}),0,Ls[0],false);
-/* 2-3 lotuses + circles */
-petals(16,1.0,1.16,Ls[1].z,Ls[1]);petals(8,.82,.96,Ls[2].z,Ls[2]);circ(.74,Ls[2].z,Ls[2]);circ(.7,Ls[2].z,Ls[2]);
-/* 4-8 triangles (stylized nested layout) */
-var UP=[[.84,-.5,.77],[.66,-.34,.58],[.5,-.18,.4],[.34,-.04,.22]],DN=[[-.7,.52,.7],[-.56,.34,.52],[-.42,.22,.38],[-.3,.1,.26],[-.16,.06,.13]];
-for(var q=0;q<4;q++){tri(UP[q],Ls[3+q]);tri(DN[q],Ls[3+q])}tri(DN[4],Ls[7]);
-/* 9 Bindu */
-var bd=mk('a-sphere',{class:'clickable',radius:.06,position:'0 -0.02 '+(Ls[8].z+.08),material:'color:#ffffff;shader:flat'},$('yan'));bd._xy=[0,-.02];Ls[8].items.push(bd);bd.addEventListener('click',function(){pick(8)});
-
-
-var SZ=[2.7,2.3,1.95,1.6,1.3,1.05,.8,.55,.3],SEP=.06,solo=false,vis=Ls.map(function(){return true});
-Ls.forEach(function(l){l.slab=mk('a-box',{position:'0 0 0',width:SZ[l.i],height:SZ[l.i],depth:.03,material:'color:'+l.col+';opacity:.14;transparent:true;shader:flat'},$('yan'))});
-function layout(){Ls.forEach(function(l){var z=l.i*SEP,show=vis[l.i]&&(!solo||cur<0||cur===l.i);
- l.items.forEach(function(e){e.setAttribute('position',e._xy[0]+' '+e._xy[1]+' '+(z+(l.i===8?.08:0)));e.setAttribute('visible',show)});
- l.slab.setAttribute('position','0 0 '+(z-.03));l.slab.setAttribute('visible',show)})}
-function explode(){SEP=SEP>.15?.06:.3;$('sp').value=SEP;layout();[].forEach.call(document.querySelectorAll('[data-k=exp]'),function(b){b.classList.toggle('on',SEP>.15)})}
-function doSolo(){solo=!solo;layout();[].forEach.call(document.querySelectorAll('[data-k=solo]'),function(b){b.classList.toggle('on',solo)})}
-function paint(){Ls.forEach(function(l){var on=l.i===cur;l.items.forEach(function(e){
-  e.setAttribute('material','color:'+(on?'#ffffff':l.col)+';shader:flat;opacity:'+((cur<0||on)?1:.4)+';transparent:true');
-  if(e.tagName==='A-BOX'){var w=on?.03:.014;e.setAttribute('height',w);e.setAttribute('depth',w)}})})}
-function pick(i){cur=i;paint();layout();var l=Ls[i];
-  if(!l){$('info').setAttribute('value','Sri Chakra · Meru');$('sub').setAttribute('value','Tap a ring or press a number');
-    $('eq').innerHTML='<b>Sri Chakra.</b> Nine layers (avaranas) rise from the outer gate to the central point, like a stepped Meru. Tap a layer or use the number buttons.<br><small>Stylized 3D model: names follow the traditional nine avaranas, but the exact classical construction of the small triangles is more intricate.</small>';return}
-  $('info').setAttribute('value',(i+1)+'. '+l.name);$('sub').setAttribute('value',l.sk);
-  $('eq').innerHTML='<b>'+(i+1)+'. '+l.name+'</b> · '+l.sk+'<br>'+l.txt+'<br><small>Stylized model; see the note on the first screen.</small>'}
-function next(){pick((cur+1)%9)}function prev(){pick((cur+8)%9)}
-function doTour(){if(tour){clearInterval(tour);tour=null}else{next();tour=setInterval(next,3500)}tb()}
-function doSpin(){spinOn=!spinOn;if(spinOn)$('spin').setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:40000;easing:linear');else $('spin').removeAttribute('animation');tb()}
-function tb(){[].forEach.call(document.querySelectorAll('[data-k=tour]'),function(b){b.classList.toggle('on',!!tour)});[].forEach.call(document.querySelectorAll('[data-k=spin]'),function(b){b.classList.toggle('on',spinOn)})}
-var B=[['Prev',prev,'#0369a1','prev'],['Next',next,'#9B59B6','next'],['Tour',doTour,'#b45309','tour'],['Spin',doSpin,'#0f766e','spin'],['All',function(){pick(-1)},'#475569','all'],['Explode',explode,'#7c3aed','exp'],['Solo',doSolo,'#0e7490','solo']];
-B.forEach(function(b,i){var h=document.createElement('button');h.className='btn pri';h.textContent=b[0];h.dataset.k=b[3];h.onclick=b[1];$('bar').appendChild(h);
-  var w=mk('a-box',{class:'clickable',position:(-.9+i*.3)+' 0.95 -0.95',rotation:'-20 0 0',width:.27,height:.1,depth:.04,color:b[2]},$('wb'));
-  mk('a-text',{value:b[0],align:'center',width:.9,position:'0 0 0.03'},w);w.addEventListener('click',b[1])});
-for(var n=1;n<=9;n++)(function(n){var h=document.createElement('button');h.className='btn';h.textContent=n;h.onclick=function(){pick(n-1)};$('bar').appendChild(h)})(n);
-
-var sl=document.createElement('label');sl.className='btn';sl.textContent='Gap ';var sp=document.createElement('input');sp.type='range';sp.id='sp';sp.min=.03;sp.max=.3;sp.step=.01;sp.value=SEP;sp.style.width='90px';sp.oninput=function(){SEP=parseFloat(sp.value);layout()};sl.appendChild(sp);$('bar').appendChild(sl);
-var vl=document.createElement('span');vl.className='btn';vl.textContent='Show ';for(var q=0;q<9;q++)(function(q){var c=document.createElement('input');c.type='checkbox';c.checked=true;c.title='Level '+(q+1);c.onchange=function(){vis[q]=c.checked;layout()};vl.appendChild(c)})(q);$('bar').appendChild(vl);
-var vr=document.createElement('button');vr.className='btn';vr.textContent='Enter VR';vr.onclick=function(){try{scene.enterVR()}catch(e){}};$('bar').appendChild(vr);
-var ar=document.createElement('button');ar.className='btn';ar.textContent='Enter AR';
-ar.onclick=function(){if(typeof scene.enterAR!=='function'){alert('3D engine not ready. Reload in Chrome.');return}if(!navigator.xr){alert('AR needs Chrome on an ARCore phone (like Pixel) over HTTPS.');return}try{scene.enterAR()}catch(e){alert('AR could not start: '+e.message)}};$('bar').appendChild(ar);
-function room(v){['sky','floor'].forEach(function(i){$(i).setAttribute('visible',v)})}
-scene.addEventListener('enter-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',true);$('cam').setAttribute('position','0 1.5 0.4');room(!scene.is('ar-mode'))});scene.addEventListener('exit-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',false);fit();room(true)});
-$('spin').setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:40000;easing:linear');tb();pick(-1);
-var cam=$('cam');function fit(){if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,z=Math.max(.4,Math.min(3.6,-1.6+1.35/(.839*a)));cam.setAttribute('position','0 1.5 '+z.toFixed(2))}
-addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});fit();
+:root{color-scheme:dark;--bg:#080d1b;--panel:rgba(13,22,43,.94);--panel2:#14213d;--line:#334563;--ink:#edf3ff;--muted:#aab9d2;--gold:#f6c76b;--accent:#8bd5ff;--rose:#f29ab5}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+a-scene{position:fixed;inset:0}
+#top{position:fixed;z-index:8;top:env(safe-area-inset-top,10px);left:10px;right:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+.brand,.toolbar,.panel,.bottom{pointer-events:auto}
+.brand{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:9px 13px;backdrop-filter:blur(12px)}
+.brand b{display:block;font-size:14px;letter-spacing:.04em}.brand span{font-size:11px;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+button,.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 11px;font:inherit;font-size:12px;cursor:pointer}
+button:hover,button.active,.tab.active{border-color:var(--gold);color:var(--gold);background:#29334a}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#left{position:fixed;z-index:7;left:10px;top:76px;bottom:100px;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.panel{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;backdrop-filter:blur(12px);box-shadow:0 10px 35px #0005;overflow:auto}
+.panel h2{font-size:14px;margin:0 0 8px;color:var(--gold)}
+.panel p{font-size:12px;line-height:1.5;color:var(--muted);margin:6px 0}
+#layerList{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.layerBtn{text-align:left;padding:7px 8px;font-size:11px;min-width:0}
+.layerBtn small{display:block;color:var(--muted);font-size:10px}
+#detail{min-height:115px}
+#detail .sanskrit{color:var(--gold);font-size:12px}
+#detail h3{font-size:14px;margin:5px 0}
+#detail p{margin:5px 0}
+#bottom{position:fixed;z-index:7;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:flex-end;justify-content:space-between;pointer-events:none}
+.bottomCard{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:9px 12px;backdrop-filter:blur(12px);max-width:min(650px,72vw);font-size:11px;line-height:1.45;color:var(--muted)}
+.bottomCard b{color:var(--ink)}
+#status{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:11px;color:var(--muted)}
+#modal{display:none;position:fixed;z-index:20;inset:0;background:#020617d9;align-items:center;justify-content:center;padding:14px}
+#modal.show{display:flex}
+.dialog{width:min(680px,100%);max-height:88vh;overflow:auto;background:#101b32;border:1px solid #455a7b;border-radius:18px;padding:18px;box-shadow:0 20px 70px #0009}
+.dialog h2{margin:0 0 8px;color:var(--gold);font-size:19px}
+.dialog p,.dialog li{font-size:13px;line-height:1.55;color:#c6d3e8}
+.dialog .close{float:right}
+.quizOpt{display:block;width:100%;text-align:left;margin:7px 0}
+#quizFeedback{min-height:22px;color:var(--gold);font-size:13px}
+#arHint{display:none;position:fixed;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);background:#07101ddd;border:1px solid var(--gold);border-radius:10px;padding:8px 12px;font-size:12px}
+@media(max-width:760px){
+ #top{align-items:flex-start}.brand{max-width:45vw}.toolbar{max-width:52vw}
+ button{padding:7px 8px;font-size:11px}
+ #left{top:116px;bottom:95px;width:min(275px,calc(100vw - 20px))}
+ .bottomCard{max-width:65vw;font-size:10px}
+ #layerList{grid-template-columns:1fr 1fr}
 }
-(function w(n){var s=document.getElementById('scene');if(window.AFRAME&&s&&typeof s.enterAR==='function'){boot();return}if(n>100){if(window.AFRAME){boot();return}document.getElementById('eq').innerHTML='<b>The 3D engine could not load.</b> Open this page in Chrome and reload.';return}setTimeout(function(){w(n+1)},100)})(0);
+@media(max-width:420px){.brand b{font-size:12px}.brand span{font-size:10px}#left{width:245px}.toolbar button[data-hide-mobile="1"]{display:none}}
+</style></head><body>
+<div id="top">
+ <div class="brand"><b>ŚRĪ CAKRA · MERU LAB</b><span>Geometry • Nine Āvaraṇas • Immersive study</span></div>
+ <div class="toolbar">
+  <button id="viewBtn" class="active">Meru 3D</button>
+  <button id="planBtn">2D Plan</button>
+  <button id="explodeBtn">Explode</button>
+  <button id="tourBtn">Guided tour</button>
+  <button id="quizBtn">Knowledge check</button>
+  <button id="arBtn" data-hide-mobile="1">Enter AR</button>
+  <button id="vrBtn" data-hide-mobile="1">Enter VR</button>
+ </div>
+</div>
+<div id="left">
+ <section class="panel">
+  <h2>Nine enclosures · Navāvaraṇa</h2>
+  <div id="layerList"></div>
+ </section>
+ <section class="panel" id="detail">
+  <h2>Explore the structure</h2>
+  <div class="sanskrit">Śrī Cakra / Śrī Yantra</div>
+  <h3>From the outer boundary to the bindu</h3>
+  <p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p>
+ </section>
+ <section class="panel">
+  <h2>Display controls</h2>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+   <button id="allBtn">Show all</button><button id="soloBtn">Isolate selected</button><button id="spinBtn" class="active">Pause rotation</button>
+  </div>
+  <p>Model height and tier spacing are illustrative display parameters, not prescribed historical measurements.</p>
+ </section>
+</div>
+<div id="bottom">
+ <div class="bottomCard"><b>Geometry note:</b> This release separates the nine āvaraṇa teaching sequence from the exact construction of the interlocking triangle network. The triangle arrangement is a schematic study model and is not certified as a canonical 43-triangle Śrī Yantra.</div>
+ <div id="status">Ready · Select an enclosure</div>
+</div>
+<div id="arHint">Aim at a horizontal surface. Tap to place the model if hit-testing is supported.</div>
+<div id="modal"><div class="dialog"><button class="close" id="closeModal">Close</button><div id="modalContent"></div></div></div>
+
+<a-scene id="scene" vr-mode-ui="enabled:false" renderer="antialias:true;alpha:true; colorManagement:true" webxr="optionalFeatures:local-floor, hit-test, dom-overlay; overlayElement: #top">
+ <a-sky id="sky" color="#080d1b"></a-sky>
+ <a-plane id="floor" rotation="-90 0 0" width="18" height="18" position="0 -0.04 -2.5" color="#101a30"></a-plane>
+ <a-entity light="type:ambient;intensity:0.72"></a-entity>
+ <a-entity light="type:directional;intensity:0.85" position="-2 5 3"></a-entity>
+ <a-entity light="type:point;intensity:0.45;color:#f3c66a" position="2 2 -2"></a-entity>
+ <a-entity id="modelRoot" position="0 0.7 -2.6">
+  <a-entity id="spinRoot">
+   <a-entity id="yantra" rotation="-90 0 0"></a-entity>
+  </a-entity>
+ </a-entity>
+ <a-ring id="reticle" visible="false" rotation="-90 0 0" radius-inner="0.12" radius-outer="0.16" material="shader:flat;color:#f6c76b;opacity:.9;side:double" position="0 0 -1"></a-ring>
+ <a-camera id="camera" position="0 1.55 0.3" look-controls wasd-controls>
+  <a-entity cursor="fuse:false" raycaster="objects:.pickable;far:8" position="0 0 -1"></a-entity>
+ </a-camera>
+ <a-entity laser-controls="hand:right" raycaster="objects:.pickable;far:8"></a-entity>
+</a-scene>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)}, scene=$('scene'), yan=$('yantra'), spinRoot=$('spinRoot');
+var layers=[
+ {name:'Bhūpura',plain:'Bhupura',sanskrit:'Trailokyamohana',form:'Three-line square with four gateways',desc:'The outer boundary enclosure. It is commonly represented as a square with four openings or gates.',color:'#e9b44c'},
+ {name:'Ṣoḍaśadala',plain:'Shodashadala',sanskrit:'Sarvāśāparipūraka',form:'Sixteen-petalled lotus',desc:'The sixteen-petal lotus enclosure. The name is commonly translated as the fulfiller of desires or aspirations.',color:'#e58ab1'},
+ {name:'Aṣṭadala',plain:'Ashtadala',sanskrit:'Sarvasaṃkṣobhaṇa',form:'Eight-petalled lotus',desc:'The eight-petal lotus enclosure, positioned inside the sixteen-petal lotus.',color:'#ee9a8b'},
+ {name:'Caturdaśāra',plain:'Chaturdashara',sanskrit:'Sarvasaubhāgyadāyaka',form:'Fourteen-triangle enclosure',desc:'The outer triangular enclosure, traditionally counted as fourteen triangles.',color:'#e9a34c'},
+ {name:'Bahirdaśāra',plain:'Bahir Dashara',sanskrit:'Sarvārthasādhaka',form:'Outer ten-triangle enclosure',desc:'The outer one of the two ten-triangle enclosures.',color:'#e78b55'},
+ {name:'Antardaśāra',plain:'Antar Dashara',sanskrit:'Sarvarakṣākara',form:'Inner ten-triangle enclosure',desc:'The inner one of the two ten-triangle enclosures.',color:'#df777b'},
+ {name:'Aṣṭakoṇa',plain:'Ashtakona',sanskrit:'Sarvarogahara',form:'Eight-triangle enclosure',desc:'The eight-triangle enclosure nearer the centre.',color:'#c48be8'},
+ {name:'Trikoṇa',plain:'Trikona',sanskrit:'Sarvasiddhiprada',form:'Central triangle',desc:'The innermost triangle surrounding the central point. Its orientation and details should be checked against the chosen lineage or reference tradition.',color:'#f2d17d'},
+ {name:'Bindu',plain:'Bindu',sanskrit:'Sarvānandamaya',form:'Central point',desc:'The central point, or bindu, which is the focal centre of the diagram.',color:'#fff4ce'}
+];
+var selected=-1, isolated=false, exploded=true, spinning=true, tourTimer=null, placed=false, hitSource=null, viewerSpace=null;
+var objects=[];
+function el(tag,attrs,parent){var n=document.createElement(tag);Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k])});(parent||yan).appendChild(n);return n}
+function line(a,b,z,layer,width){var dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);if(len<.001)return null;
+ var n=el('a-box',{class:'pickable',position:((a[0]+b[0])/2)+' '+((a[1]+b[1])/2)+' '+z,rotation:'0 0 '+(Math.atan2(dy,dx)*180/Math.PI),width:len,height:width||.018,depth:.018,material:'shader:standard;color:'+layer.color+';metalness:.18;roughness:.5'},yan);
+ n.dataset.layer=layer.index;n.addEventListener('click',function(){select(layer.index)});objects.push(n);layer.items.push(n);return n}
+function polygon(points,z,layer,closed){for(var i=0;i<(closed?points.length:points.length-1);i++)line(points[i],points[(i+1)%points.length],z,layer)}
+function circle(r,z,layer){var pts=[];for(var i=0;i<96;i++){var a=i*Math.PI*2/96;pts.push([r*Math.cos(a),r*Math.sin(a)])}polygon(pts,z,layer,true)}
+function lotus(count,r0,r1,z,layer){circle(r0,z,layer);for(var i=0;i<count;i++){var a=i*2*Math.PI/count,h=Math.PI/count*.88;polygon([[r0*Math.cos(a-h),r0*Math.sin(a-h)],[r1*Math.cos(a),r1*Math.sin(a)],[r0*Math.cos(a+h),r0*Math.sin(a+h)]],z,layer,false)}}
+layers.forEach(function(l,i){l.index=i;l.items=[];l.nodes=[];l.slab=null});
+/* Plan-view teaching schematic. The nine-triangle network is intentionally marked as non-canonical. */
+var sq=1.32, b=layers[0];polygon([[-sq,-sq],[sq,-sq],[sq,sq],[-sq,sq]],0,b,true);polygon([[-sq+.07,-sq+.07],[sq-.07,-sq+.07],[sq-.07,sq-.07],[-sq+.07,sq-.07]],0,b,true);
+for(var g=0;g<4;g++){var gate=[[sq,.18],[sq+.14,.18],[sq+.14,-.18],[sq,-.18]].map(function(p){var a=g*Math.PI/2;return[p[0]*Math.cos(a)-p[1]*Math.sin(a),p[0]*Math.sin(a)+p[1]*Math.cos(a)]});polygon(gate,0,b,false)}
+lotus(16,1.03,1.2,0,layers[1]);lotus(8,.82,.97,0,layers[2]);circle(.76,0,layers[2]);circle(.72,0,layers[2]);
+/* A readable 4-up / 5-down triangle study arrangement; not a validated classical solution. */
+var triSpecs=[
+ {up:true,apex:.98,base:-.24,half:.92,layer:3},{up:false,apex:-.98,base:.24,half:.92,layer:3},
+ {up:true,apex:.78,base:-.12,half:.73,layer:4},{up:false,apex:-.78,base:.12,half:.73,layer:4},
+ {up:true,apex:.59,base:.02,half:.56,layer:5},{up:false,apex:-.59,base:-.02,half:.56,layer:5},
+ {up:true,apex:.4,base:.12,half:.39,layer:6},{up:false,apex:-.4,base:-.12,half:.39,layer:6},
+ {up:false,apex:-.23,base:.22,half:.23,layer:7}
+];
+triSpecs.forEach(function(t){var l=layers[t.layer],pts=t.up?[[0,t.apex],[-t.half,t.base],[t.half,t.base]]:[[0,t.apex],[-t.half,t.base],[t.half,t.base]];polygon(pts,0,l,true)});
+var bindu=el('a-sphere',{class:'pickable',radius:.055,position:'0 0 .04',material:'shader:standard;color:#fff2c4;emissive:#8d6c2d;emissiveIntensity:.35'},yan);bindu.dataset.layer=8;bindu.addEventListener('click',function(){select(8)});layers[8].items.push(bindu);objects.push(bindu);
+/* Meru teaching tiers are display geometry; each enclosure is a raised outline, not a claimed archaeological replica. */
+var radii=[1.42,1.2,1.0,.84,.68,.53,.39,.25,.1];
+layers.forEach(function(l,i){var r=radii[i],tier=el('a-box',{position:'0 0 0',width:r*2,height:r*2,depth:.035,material:'shader:standard;color:'+l.color+';opacity:.13;transparent:true;side:double'},yan);l.slab=tier});
+function renderLayers(){
+ layers.forEach(function(l,i){
+  var z=exploded?i*.075:0, show=(!isolated||selected<0||selected===i);
+  l.items.forEach(function(o){var p=o.dataset.basePos;if(!p){var a=o.getAttribute('position');o.dataset.basePos=[a.x,a.y,a.z].join(',')}var v=o.dataset.basePos.split(',').map(Number);o.setAttribute('position',v[0]+' '+v[1]+' '+(v[2]+z));o.setAttribute('visible',show)});
+  l.slab.setAttribute('position','0 0 '+(z-.035));l.slab.setAttribute('visible',show&&exploded);
+ });
+}
+function paint(){layers.forEach(function(l,i){l.items.forEach(function(o){var active=i===selected;o.setAttribute('material','shader:standard;color:'+(active?'#fff8df':l.color)+';emissive:'+(active?'#5d4720':'#000000')+';emissiveIntensity:'+(active?.45:0));if(o.tagName==='A-BOX'){o.setAttribute('height',active?.03:.018);o.setAttribute('depth',active?.026:.018)}})})}
+function select(i){selected=i;isolated=false;renderLayers();paint();document.querySelectorAll('.layerBtn').forEach(function(btn){btn.classList.toggle('active',Number(btn.dataset.i)===i)});
+ var d=$('detail');if(i<0){d.innerHTML='<h2>Explore the structure</h2><div class="sanskrit">Śrī Cakra / Śrī Yantra</div><h3>From the outer boundary to the bindu</h3><p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p>';$('status').textContent='All enclosures visible';return}
+ var l=layers[i];d.innerHTML='<h2>Enclosure '+(i+1)+' of 9</h2><div class="sanskrit">'+l.sanskrit+'</div><h3>'+l.name+' · '+l.plain+'</h3><p><b>Geometric form:</b> '+l.form+'</p><p>'+l.desc+'</p><p><small>Names and explanatory translations can vary by textual or ritual source. This page presents a study sequence, not ritual instruction.</small></p>';$('status').textContent='Selected: '+l.plain}
+function buildLayerButtons(){var host=$('layerList');layers.forEach(function(l,i){var b=document.createElement('button');b.className='layerBtn';b.dataset.i=i;b.innerHTML=(i+1)+'. '+l.name+'<small>'+l.form+'</small>';b.onclick=function(){select(i)};host.appendChild(b)})}
+function setMode(is3d){exploded=is3d;$('viewBtn').classList.toggle('active',is3d);$('planBtn').classList.toggle('active',!is3d);renderLayers();$('status').textContent=is3d?'Meru-style stepped study view':'Plan view · all enclosures on one plane';}
+function toggleExplode(){exploded=!exploded;$('explodeBtn').classList.toggle('active',exploded);renderLayers();$('status').textContent=exploded?'Tier separation enabled':'Tier separation collapsed'}
+function toggleSolo(){isolated=!isolated;renderLayers();$('soloBtn').classList.toggle('active',isolated);$('status').textContent=isolated?'Isolating selected enclosure':'All enclosures visible'}
+function tour(){if(tourTimer){clearInterval(tourTimer);tourTimer=null;$('tourBtn').classList.remove('active');$('status').textContent='Guided tour paused';return}select(0);$('tourBtn').classList.add('active');tourTimer=setInterval(function(){select((selected+1)%9)},3200);$('status').textContent='Guided tour · moving from outside inward'}
+function quiz(){var questions=[
+ {q:'How many interlocking triangles are traditionally described in the central Sri Yantra network?',a:['7','9','13','43'],correct:1,why:'The network is formed by four upward-pointing and five downward-pointing triangles. Their intersections form 43 smaller triangles or chambers.'},
+ {q:'Which enclosure is the outer square with four gateways?',a:['Bhūpura','Aṣṭadala','Trikoṇa','Bindu'],correct:0,why:'Bhūpura is the outer boundary, commonly represented as a square with four gateways.'},
+ {q:'Which enclosure is associated with sixteen petals?',a:['Aṣṭadala','Ṣoḍaśadala','Caturdaśāra','Antardaśāra'],correct:1,why:'Ṣoḍaśadala is the sixteen-petalled lotus.'},
+ {q:'What is the name of the central point?',a:['Meru','Bhūpura','Bindu','Aṣṭakoṇa'],correct:2,why:'Bindu is the central point.'},
+ {q:'What is the key difference between the plan view and Meru-style view in this learning model?',a:['Colour palette','The enclosures are raised into tiers','The bindu is removed','The lotus petals disappear'],correct:1,why:'The Meru-style view raises the enclosures into successive levels. The exact form and proportions should be checked against a specific traditional exemplar.'}
+ ];var idx=0,score=0;function show(){var q=questions[idx];$('modalContent').innerHTML='<h2>Knowledge check</h2><p>Question '+(idx+1)+' of '+questions.length+'</p><h3>'+q.q+'</h3>'+q.a.map(function(a,i){return '<button class="quizOpt" data-answer="'+i+'">'+String.fromCharCode(65+i)+'. '+a+'</button>'}).join('')+'<div id="quizFeedback"></div><button id="nextQ" disabled>'+(idx===questions.length-1?'See result':'Next question')+'</button>';document.querySelectorAll('.quizOpt').forEach(function(b){b.onclick=function(){if($('nextQ').disabled===false)return;var ok=Number(b.dataset.answer)===q.correct;if(ok)score++;$('quizFeedback').textContent=(ok?'Correct. ':'Not quite. ')+q.why;document.querySelectorAll('.quizOpt').forEach(function(x){x.disabled=true;x.classList.toggle('active',x===b)});$('nextQ').disabled=false}});$('nextQ').onclick=function(){idx++;if(idx<questions.length)show();else{$('modalContent').innerHTML='<h2>Knowledge check complete</h2><p>You scored '+score+' out of '+questions.length+'.</p><p>Use the guided tour and enclosure selector to review any areas you would like to revisit.</p><button id="again">Try again</button>';$('again').onclick=function(){idx=0;score=0;show()}}}}$('modal').classList.add('show');show()}
+function toggleSpin(){spinning=!spinning;if(spinning)spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');else spinRoot.removeAttribute('animation');$('spinBtn').textContent=spinning?'Pause rotation':'Resume rotation';$('spinBtn').classList.toggle('active',spinning)}
+/* WebXR hit-test: only activates in an AR session that supports hit-test. */
+function arFrame(time,frame){if(!frame||!viewerSpace||!hitSource)return;var results=frame.getHitTestResults(hitSource),ret=$('reticle');if(results.length){var pose=results[0].getPose(scene.renderer.xr.getReferenceSpace());if(pose){ret.object3D.visible=true;ret.object3D.position.set(pose.transform.position.x,pose.transform.position.y,pose.transform.position.z);ret.object3D.quaternion.set(pose.transform.orientation.x,pose.transform.orientation.y,pose.transform.orientation.z,pose.transform.orientation.w);ret.object3D.userData.hitPose=pose.transform}}else ret.object3D.visible=false}
+AFRAME.registerComponent('meru-hit-test-loop',{tick:function(){if(this.el.is('ar-mode')&&this.el.frame)arFrame(0,this.el.frame)}});scene.setAttribute('meru-hit-test-loop','');
+scene.addEventListener('enter-vr',function(){if(!scene.is('ar-mode'))return;$('arHint').style.display='block';var session=scene.renderer.xr.getSession();if(!session)return;session.requestReferenceSpace('viewer').then(function(space){viewerSpace=space;return session.requestHitTestSource({space:space})}).then(function(source){hitSource=source}).catch(function(){$('status').textContent='AR hit-testing is unavailable on this device/browser'});session.addEventListener('select',function(){var pose=$('reticle').object3D.userData.hitPose;if(!pose)return;$('modelRoot').object3D.position.set(pose.position.x,pose.position.y,pose.position.z);placed=true;$('arHint').textContent='Model placed. Move around to inspect it.';$('status').textContent='Model placed in AR'});});
+scene.addEventListener('exit-vr',function(){viewerSpace=null;hitSource=null;$('arHint').style.display='none';$('arHint').textContent='Aim at a horizontal surface. Tap to place the model if hit-testing is supported.';$('modelRoot').object3D.position.set(0,.7,-2.6)});
+$('arBtn').onclick=function(){if(!navigator.xr||!navigator.xr.isSessionSupported){alert('WebXR AR is not available in this browser. Try a supported Android device and Chrome over HTTPS.');return}navigator.xr.isSessionSupported('immersive-ar').then(function(ok){if(!ok){alert('This device/browser does not report immersive-ar support.');return}scene.enterAR().catch(function(e){alert('Could not start AR: '+e.message)})})};
+$('vrBtn').onclick=function(){if(!navigator.xr){alert('WebXR is not available in this browser.');return}scene.enterVR().catch(function(e){alert('Could not start VR: '+e.message)})};
+$('viewBtn').onclick=function(){setMode(true)};$('planBtn').onclick=function(){setMode(false)};$('explodeBtn').onclick=toggleExplode;$('tourBtn').onclick=tour;$('quizBtn').onclick=quiz;$('allBtn').onclick=function(){isolated=false;select(-1);renderLayers()};$('soloBtn').onclick=toggleSolo;$('spinBtn').onclick=toggleSpin;$('closeModal').onclick=function(){$('modal').classList.remove('show')};$('modal').addEventListener('click',function(e){if(e.target===$('modal'))$('modal').classList.remove('show')});
+buildLayerButtons();select(-1);renderLayers();spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');
+function fit(){var cam=$('camera');if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight;cam.setAttribute('position','0 1.55 '+(a<.8?'.8':'.3'))}
+window.addEventListener('resize',fit);fit();
+})();
 </script></body></html>
