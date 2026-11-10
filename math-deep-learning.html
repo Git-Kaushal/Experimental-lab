@@ -125,7 +125,7 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
   
 var P={auto:true,m:1,b:0},A={x:[1,.5],W:[[.8,-.5,.3],[.2,.9,-.7]],b:[0,.1,-.1],V:[.6,-.4,.9],c:.05,act:'relu'};
 var PR=[['in-1','hid-1'],['in-1','hid-2'],['in-1','hid-3'],['in-2','hid-1'],['in-2','hid-2'],['in-2','hid-3'],['hid-1','out-1'],['hid-2','out-1'],['hid-3','out-1']];
-var TV={};Object.keys(N).forEach(function(k){TV[k]=make('a-text',{value:'',position:N[k][0]+' '+(N[k][1]-.17)+' '+N[k][2],align:'center',width:'0.8',color:'#ffffff'},pivot)});
+var TV={};Object.keys(N).forEach(function(k){TV[k]=make('a-text',{value:'',position:N[k][0]+' '+(N[k][1]-.17)+' '+N[k][2],align:'center',width:'1.4',color:'#ffffff'},pivot)});
 function f2(v){return v.toFixed(2)}
 function fa(z){return A.act==='relu'?Math.max(0,z):A.act==='tanh'?Math.tanh(z):1/(1+Math.exp(-z))}
 function nn(){var h=[0,1,2].map(function(j){var z=A.x[0]*A.W[0][j]+A.x[1]*A.W[1][j]+A.b[j];return[z,fa(z)]}),y=h[0][1]*A.V[0]+h[1][1]*A.V[1]+h[2][1]*A.V[2]+A.c;
@@ -141,7 +141,7 @@ function num(lab,get,set,rng){var l=document.createElement('label');l.textConten
  if(rng){r=document.createElement('input');r.type='range';r.min=-3;r.max=3;r.step=.1;r.value=get();r.oninput=function(){i.value=r.value;set(parseFloat(r.value));upd()};l.appendChild(r)}return l}
 function row(){var d=document.createElement('div');d.className='r';[].slice.call(arguments).forEach(function(e){d.appendChild(e)});return d}
 function build(){pn.innerHTML='';
- if(current===1){var c=document.createElement('label'),k=document.createElement('input');k.type='checkbox';k.checked=P.auto;k.onchange=function(){P.auto=k.checked};c.appendChild(k);c.appendChild(document.createTextNode(' Auto-animate the slope'));
+ if(current===1){var c=document.createElement('label'),k=document.createElement('input');k.type='checkbox';k.checked=P.auto;k.onchange=function(){P.auto=k.checked;upd()};c.appendChild(k);c.appendChild(document.createTextNode(' Auto-animate the slope'));
   pn.appendChild(row(c));
   pn.appendChild(row(num('slope m',function(){return P.m},function(v){P.auto=false;k.checked=false;P.m=v},1)));
   pn.appendChild(row(num('intercept b',function(){return P.b},function(v){P.auto=false;k.checked=false;P.b=v},1)));
@@ -155,8 +155,8 @@ function build(){pn.innerHTML='';
  }
  var od=document.createElement('div');od.id='po';pn.appendChild(od);upd()}
 function upd(){var od=document.getElementById('po');
- if(current===1){if(od)od.innerHTML='y = m·x + b. Type numbers or drag the sliders; the yellow line follows.';return}
- var r=nn();if(od)od.innerHTML=r.h.map(function(q,j){return 'z'+(j+1)+' = '+f2(A.x[0])+'×'+f2(A.W[0][j])+' + '+f2(A.x[1])+'×'+f2(A.W[1][j])+' + '+f2(A.b[j])+' = '+f2(q[0])+' → h'+(j+1)+' = '+A.act+'('+f2(q[0])+') = '+f2(q[1])}).join('<br>')+
+ if(current===1){window.__sum=P.auto?'Module 1 · slope animating (switch off auto to set m and b)':'Module 1 · y = '+f2(P.m)+'x + '+f2(P.b);if(od)od.innerHTML='y = m·x + b. Type numbers or drag the sliders; the yellow line follows.';return}
+ var r=nn();window.__sum='Module 8 · ŷ = '+f2(r.y)+'   h = ['+r.h.map(function(q){return f2(q[1])}).join(', ')+']';if(od)od.innerHTML=r.h.map(function(q,j){return 'z'+(j+1)+' = '+f2(A.x[0])+'×'+f2(A.W[0][j])+' + '+f2(A.x[1])+'×'+f2(A.W[1][j])+' + '+f2(A.b[j])+' = '+f2(q[0])+' → h'+(j+1)+' = '+A.act+'('+f2(q[0])+') = '+f2(q[1])}).join('<br>')+
  '<br><b>ŷ</b> = Σ vj·hj + c = '+f2(A.V[0])+'×'+f2(r.h[0][1])+' + '+f2(A.V[1])+'×'+f2(r.h[1][1])+' + '+f2(A.V[2])+'×'+f2(r.h[2][1])+' + '+f2(A.c)+' = <b>'+f2(r.y)+'</b><br><small>Green lines = positive weights, red = negative. Output layer is linear.</small>'}
 nn();setTimeout(build,0);
 /* ---------- Animation loop ---------- */
@@ -319,5 +319,60 @@ nn();setTimeout(build,0);
 })();
 </script>
 
+<style id="xr-sheet-style">
+.a-enter-vr,.a-enter-ar{display:none!important}
+#xrSheet{position:fixed;z-index:9;color:#e5eefb;background:rgba(8,15,31,.96);border:1px solid #334b70;backdrop-filter:blur(14px);font:13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
+#xrSheet *{box-sizing:border-box}
+#xsGrab{display:flex;align-items:center;gap:8px;padding:8px 10px 4px}
+#xsTabs{display:flex;gap:6px;flex:1}
+.xt{flex:1;border:1px solid #456184;background:#172944;color:#eaf2ff;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;cursor:pointer}
+.xt.active{background:#075985;border-color:#38bdf8}
+#xsToggle{border:1px solid #456184;background:#172944;color:#eaf2ff;border-radius:10px;min-width:40px;min-height:36px;font-size:16px;cursor:pointer}
+#xsLive{padding:2px 12px 8px;color:#fef08a;font:600 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xp{display:none;overflow:auto;padding:0 12px 12px;-webkit-overflow-scrolling:touch}.xp.active{display:block}
+#xrSheet #pn{position:static!important;width:auto!important;max-height:none!important;overflow:visible!important;border:0!important;background:none!important;padding:0!important;font-size:13px;color:#e5eefb}
+#xrSheet #pn label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#a9bdd9}
+#xrSheet #pn label:has(input[type=checkbox]){flex-direction:row;align-items:center;gap:8px;font-size:13px;color:#e5eefb}
+#xrSheet #pn .r{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin:8px 0}
+#xrSheet #pn .r[data-cap]::before{content:attr(data-cap);grid-column:1/-1;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8fb3e0}
+#xrSheet #pn input[type=number]{width:100%!important;background:#081326;color:#fff;border:1px solid #456184;border-radius:8px;padding:7px;font-size:14px}
+#xrSheet #pn input[type=range]{width:100%!important;accent-color:#38bdf8}
+#xrSheet #pn select{background:#081326;color:#fff;border:1px solid #456184;border-radius:8px;padding:7px;font-size:14px}
+#xrSheet #po{margin-top:8px;padding:10px;background:#0b1a2f;border:1px solid #2c4364;border-radius:10px;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere;color:#d6e2f3}
+#xrSheet #po small{color:#9fb2cc}
+#xrSheet #studioDock{position:static!important;width:auto!important;max-height:none!important;overflow:visible!important;border:0!important;box-shadow:none!important;background:none!important;backdrop-filter:none!important}
+#xrSheet #studioDock header{position:static;background:none;border:0;padding:4px 0 8px}
+#xrSheet #dockToggle{display:none}
+#xrSheet #studioDock .nav{padding:0 0 6px}#xrSheet #studioDock .body{padding:6px 0 10px}#xrSheet #studioDock .foot{padding:8px 0;border-top:1px solid #263d5d}
+#xrSheet #studioDock .nav button{font-size:12px}
+@media(min-width:761px){#xrSheet{top:64px;right:12px;bottom:12px;width:min(460px,calc(100vw - 24px));border-radius:16px;box-shadow:0 16px 48px #0008}#xsToggle{display:none}.xp{flex:1 1 auto;min-height:0}}
+@media(max-width:760px){
+ #xrSheet{left:0;right:0;bottom:0;border-radius:18px 18px 0 0;border-bottom:0;max-height:70vh;padding-bottom:env(safe-area-inset-bottom,0px);transform:translateY(calc(100% - 92px));transition:transform .25s ease}
+ #xrSheet.open{transform:none}.xp{max-height:calc(70vh - 100px)}
+ #ui{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px))}
+ #ui::-webkit-scrollbar{display:none}#ui .btn{flex:0 0 auto;white-space:nowrap;padding:7px 11px;font-size:13px}#hint{display:none}
+}
+</style>
+<script id="xr-sheet-script">
+(function(){var $=function(i){return document.getElementById(i)},pn=$('pn'),dock=$('studioDock'),scene=$('scene'),ui=$('ui');
+if(!pn||!dock||!scene)return;
+var sh=document.createElement('div');sh.id='xrSheet';
+sh.innerHTML='<div id="xsGrab"><div id="xsTabs"><button class="xt active" data-p="controls">3D controls</button><button class="xt" data-p="studio">Studio labs</button></div><button id="xsToggle" aria-expanded="false" aria-label="Expand or collapse panel">&#9650;</button></div><div id="xsLive">3D scene · adjust the values below</div><div class="xp active" data-p="controls"></div><div class="xp" data-p="studio"></div>';
+document.body.appendChild(sh);
+sh.querySelector('.xp[data-p=controls]').appendChild(pn);sh.querySelector('.xp[data-p=studio]').appendChild(dock);
+function open(o){sh.classList.toggle('open',o);$('xsToggle').setAttribute('aria-expanded',o);$('xsToggle').innerHTML=o?'&#9660;':'&#9650;'}
+$('xsToggle').onclick=function(){open(!sh.classList.contains('open'))};
+[].forEach.call(sh.querySelectorAll('.xt'),function(b){b.onclick=function(){[].forEach.call(sh.querySelectorAll('.xt,.xp'),function(e){e.classList.toggle('active',e.dataset.p===b.dataset.p)});open(true)}});
+open(innerWidth>760);
+setInterval(function(){if(window.__sum)$('xsLive').textContent=window.__sum},400);
+function cap(){[].forEach.call(pn.querySelectorAll('.r'),function(r){var t=r.textContent.trim(),c=/^Auto/.test(t)?'Animation':/^slope/.test(t)?'Slope m':/^intercept/.test(t)?'Intercept b':/^x1/.test(t)?'Inputs':/^w11/.test(t)?'Weights · input 1 to hidden 1–3':/^w21/.test(t)?'Weights · input 2 to hidden 1–3':/^b1/.test(t)?'Hidden biases':/^v1/.test(t)?'Output weights v and bias c':/^Hidden activation/.test(t)?'Activation function':'';if(c)r.setAttribute('data-cap',c)})}
+new MutationObserver(cap).observe(pn,{childList:true});cap();
+if(ui){[].forEach.call(ui.querySelectorAll('button'),function(b){if(b.textContent==='Controls')b.remove()});
+ var hint=$('hint');if(hint)hint.textContent='Drag to look · WASD to move';
+ var mk=function(t,f){var b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=f;ui.appendChild(b)};
+ mk('Enter VR',function(){try{scene.enterVR()}catch(e){alert('VR is not available here.')}});
+ mk('Enter AR',function(){if(typeof scene.enterAR!=='function'||!navigator.xr){alert('AR needs Chrome on an ARCore phone over HTTPS.');return}try{scene.enterAR()}catch(e){alert('AR could not start: '+e.message)}})}
+})();
+</script>
 </body>
 </html>
