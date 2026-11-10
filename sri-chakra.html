@@ -65,7 +65,48 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
  .bottomCard{max-width:65vw;font-size:10px}
  #layerList{grid-template-columns:1fr 1fr}
 }
-@media(max-width:420px){.brand b{font-size:12px}.brand span{font-size:10px}#left{width:245px}.toolbar button[data-hide-mobile="1"]{display:none}}
+@media(max-width:420px){.brand b{font-size:12px}.brand span{font-size:10px}#left{width:245px}}
+
+.a-enter-vr,.a-enter-ar{display:none!important}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+#grab{display:flex;align-items:center;gap:8px;pointer-events:auto}
+#grab #status{flex:1;text-align:center;border:0;background:none;padding:4px 2px;font-size:12px;color:var(--ink)}
+#grab button{min-width:36px;min-height:34px;font-size:18px;line-height:1;padding:4px 8px}
+#tabs{display:flex;gap:6px;pointer-events:auto}#tabs .tab{flex:1;text-align:center}
+.panel h2{font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+#detail .kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+#detail .pips{display:flex;gap:4px;margin:6px 0 8px}
+#detail .pips i{flex:1;height:5px;border-radius:3px;background:#2a3856}
+#detail .pips i.past{background:color-mix(in srgb,var(--c) 45%,#2a3856)}
+#detail .pips i.on{background:var(--c);box-shadow:0 0 8px var(--c)}
+#detail h3{font-size:17px;margin:4px 0 2px}#detail h3 span{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+#detail .chips2{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#detail .chips2 span{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--muted)}
+#detail .chips2 b{color:var(--ink);font-weight:600;margin-right:4px}
+#detail .note{font-size:10px;opacity:.75}
+@media(min-width:761px){
+ #left{top:84px;bottom:16px;width:min(360px,calc(100vw - 24px));overflow:hidden}
+ #grab{order:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px 6px}
+ #grabBtn,#tabs{display:none}
+ #detail{flex:1 1 auto;min-height:170px}
+ .pane{display:block}
+}
+@media(max-width:760px){
+ #top{flex-direction:column;align-items:stretch;gap:6px;top:calc(env(safe-area-inset-top,0px) + 8px)}
+ .brand{max-width:none;padding:6px 12px;display:flex;align-items:baseline;gap:8px}
+ .brand span{display:none}.brand b{font-size:12px;display:inline}
+ .toolbar{max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+ .toolbar::-webkit-scrollbar{display:none}.toolbar button{flex:0 0 auto;white-space:nowrap}
+ #left{left:0;right:0;top:auto;bottom:0;width:100%;max-height:66vh;gap:6px;padding:6px 10px calc(10px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;backdrop-filter:blur(14px);pointer-events:auto;transform:translateY(calc(100% - 112px));transition:transform .25s ease;overflow:hidden}
+ #left.open{transform:none}
+ #p-layers{padding:0;border:0;background:none;box-shadow:none;overflow:visible}#p-layers h2{display:none}
+ #layerList{display:flex;overflow-x:auto;gap:6px;padding:2px 0 6px;scrollbar-width:none}
+ #layerList::-webkit-scrollbar{display:none}
+ .layerBtn{flex:0 0 auto;white-space:nowrap;border-radius:999px;padding:7px 12px;font-size:12px}.layerBtn small{display:none}
+ .pane{display:none;max-height:34vh;overflow:auto;box-shadow:none}
+ #left[data-tab=detail] [data-pane=detail],#left[data-tab=controls] [data-pane=controls],#left[data-tab=notes] [data-pane=notes]{display:block}
+}
 </style></head><body>
 <div id="top">
  <div class="brand"><b>ŚRĪ CAKRA · MERU LAB</b><span>Geometry • Nine Āvaraṇas • Immersive study</span></div>
@@ -79,28 +120,30 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <button id="vrBtn" data-hide-mobile="1">Enter VR</button>
  </div>
 </div>
-<div id="left">
- <section class="panel">
-  <h2>Nine enclosures · Navāvaraṇa</h2>
-  <div id="layerList"></div>
- </section>
- <section class="panel" id="detail">
+<div id="left" data-tab="detail">
+ <div id="grab">
+  <button id="prevBtn" aria-label="Previous enclosure">&#8249;</button>
+  <div id="status">Ready · Select an enclosure</div>
+  <button id="nextBtn" aria-label="Next enclosure">&#8250;</button>
+  <button id="grabBtn" aria-label="Expand or collapse panel" aria-expanded="false">&#9650;</button>
+ </div>
+ <section class="panel" id="p-layers"><h2>Nine enclosures · Navāvaraṇa</h2><div id="layerList"></div></section>
+ <div id="tabs"><button class="tab active" data-t="detail">Details</button><button class="tab" data-t="controls">Controls</button><button class="tab" data-t="notes">Notes</button></div>
+ <section class="panel pane" data-pane="detail" id="detail">
   <h2>Explore the structure</h2>
   <div class="sanskrit">Śrī Cakra / Śrī Yantra</div>
   <h3>From the outer boundary to the bindu</h3>
   <p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p>
  </section>
- <section class="panel">
+ <section class="panel pane" data-pane="controls">
   <h2>Display controls</h2>
-  <div style="display:flex;gap:6px;flex-wrap:wrap">
-   <button id="allBtn">Show all</button><button id="soloBtn">Isolate selected</button><button id="spinBtn" class="active">Pause rotation</button>
-  </div>
+  <div class="row"><button id="allBtn">Show all</button><button id="soloBtn">Isolate selected</button><button id="spinBtn" class="active">Pause rotation</button></div>
   <p>Model height and tier spacing are illustrative display parameters, not prescribed historical measurements.</p>
  </section>
-</div>
-<div id="bottom">
- <div class="bottomCard"><b>Geometry note:</b> This release separates the nine āvaraṇa teaching sequence from the exact construction of the interlocking triangle network. The triangle arrangement is a schematic study model and is not certified as a canonical 43-triangle Śrī Yantra.</div>
- <div id="status">Ready · Select an enclosure</div>
+ <section class="panel pane" data-pane="notes">
+  <h2>Geometry note</h2>
+  <p>This release separates the nine āvaraṇa teaching sequence from the exact construction of the interlocking triangle network. The triangle arrangement is a schematic study model and is not certified as a canonical 43-triangle Śrī Yantra.</p>
+ </section>
 </div>
 <div id="arHint">Aim at a horizontal surface. Tap to place the model if hit-testing is supported.</div>
 <div id="modal"><div class="dialog"><button class="close" id="closeModal">Close</button><div id="modalContent"></div></div></div>
@@ -118,7 +161,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
  </a-entity>
  <a-ring id="reticle" visible="false" rotation="-90 0 0" radius-inner="0.12" radius-outer="0.16" material="shader:flat;color:#f6c76b;opacity:.9;side:double" position="0 0 -1"></a-ring>
  <a-camera id="camera" position="0 1.55 0.3" look-controls wasd-controls>
-  <a-entity cursor="fuse:false" raycaster="objects:.pickable;far:8" position="0 0 -1"></a-entity>
+  <a-entity id="gz" visible="false" cursor="fuse:false" raycaster="objects:.pickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.012;radiusOuter:0.022" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true"></a-entity>
  </a-camera>
  <a-entity laser-controls="hand:right" raycaster="objects:.pickable;far:8"></a-entity>
 </a-scene>
@@ -175,8 +218,8 @@ function renderLayers(){
 function paint(){layers.forEach(function(l,i){l.items.forEach(function(o){var active=i===selected;o.setAttribute('material','shader:standard;color:'+(active?'#fff8df':l.color)+';emissive:'+(active?'#5d4720':'#000000')+';emissiveIntensity:'+(active?.45:0));if(o.tagName==='A-BOX'){o.setAttribute('height',active?.03:.018);o.setAttribute('depth',active?.026:.018)}})})}
 function select(i){selected=i;isolated=false;renderLayers();paint();document.querySelectorAll('.layerBtn').forEach(function(btn){btn.classList.toggle('active',Number(btn.dataset.i)===i)});
  var d=$('detail');if(i<0){d.innerHTML='<h2>Explore the structure</h2><div class="sanskrit">Śrī Cakra / Śrī Yantra</div><h3>From the outer boundary to the bindu</h3><p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p>';$('status').textContent='All enclosures visible';return}
- var l=layers[i];d.innerHTML='<h2>Enclosure '+(i+1)+' of 9</h2><div class="sanskrit">'+l.sanskrit+'</div><h3>'+l.name+' · '+l.plain+'</h3><p><b>Geometric form:</b> '+l.form+'</p><p>'+l.desc+'</p><p><small>Names and explanatory translations can vary by textual or ritual source. This page presents a study sequence, not ritual instruction.</small></p>';$('status').textContent='Selected: '+l.plain}
-function buildLayerButtons(){var host=$('layerList');layers.forEach(function(l,i){var b=document.createElement('button');b.className='layerBtn';b.dataset.i=i;b.innerHTML=(i+1)+'. '+l.name+'<small>'+l.form+'</small>';b.onclick=function(){select(i)};host.appendChild(b)})}
+ var l=layers[i],outer=i>0?layers[i-1].name:'none (outermost)',inner=i<8?layers[i+1].name:'none (the centre)';d.innerHTML='<div class="kicker">Enclosure '+(i+1)+' of 9</div><div class="pips">'+layers.map(function(x,k){return '<i class="'+(k===i?'on':k<i?'past':'')+'" style="--c:'+x.color+'"></i>'}).join('')+'</div><h3>'+l.name+'<span>'+l.plain+'</span></h3><div class="sanskrit">'+l.sanskrit+'</div><div class="chips2"><span><b>Form</b>'+l.form+'</span><span><b>Outside</b>'+outer+'</span><span><b>Inside</b>'+inner+'</span></div><p>'+l.desc+'</p><p class="note">Names and explanatory translations can vary by textual or ritual source. This page presents a study sequence, not ritual instruction.</p>';$('status').textContent='Selected: '+l.plain}
+function buildLayerButtons(){var host=$('layerList');layers.forEach(function(l,i){var b=document.createElement('button');b.className='layerBtn';b.dataset.i=i;b.innerHTML='<i class="dot" style="background:'+l.color+'"></i>'+(i+1)+'. '+l.name+'<small>'+l.form+'</small>';b.onclick=function(){select(i)};host.appendChild(b)})}
 function setMode(is3d){exploded=is3d;$('viewBtn').classList.toggle('active',is3d);$('planBtn').classList.toggle('active',!is3d);renderLayers();$('status').textContent=is3d?'Meru-style stepped study view':'Plan view · all enclosures on one plane';}
 function toggleExplode(){exploded=!exploded;$('explodeBtn').classList.toggle('active',exploded);renderLayers();$('status').textContent=exploded?'Tier separation enabled':'Tier separation collapsed'}
 function toggleSolo(){isolated=!isolated;renderLayers();$('soloBtn').classList.toggle('active',isolated);$('status').textContent=isolated?'Isolating selected enclosure':'All enclosures visible'}
@@ -198,7 +241,21 @@ $('arBtn').onclick=function(){if(!navigator.xr||!navigator.xr.isSessionSupported
 $('vrBtn').onclick=function(){if(!navigator.xr){alert('WebXR is not available in this browser.');return}scene.enterVR().catch(function(e){alert('Could not start VR: '+e.message)})};
 $('viewBtn').onclick=function(){setMode(true)};$('planBtn').onclick=function(){setMode(false)};$('explodeBtn').onclick=toggleExplode;$('tourBtn').onclick=tour;$('quizBtn').onclick=quiz;$('allBtn').onclick=function(){isolated=false;select(-1);renderLayers()};$('soloBtn').onclick=toggleSolo;$('spinBtn').onclick=toggleSpin;$('closeModal').onclick=function(){$('modal').classList.remove('show')};$('modal').addEventListener('click',function(e){if(e.target===$('modal'))$('modal').classList.remove('show')});
 buildLayerButtons();select(-1);renderLayers();spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');
-function fit(){var cam=$('camera');if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight;cam.setAttribute('position','0 1.55 '+(a<.8?'.8':'.3'))}
+function fit(){var cam=$('camera');if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,p=a<.9,z=p?Math.max(.3,Math.min(2.4,-2.6+1.7/(.839*a))):.3;cam.setAttribute('position','0 '+(p?'1.3':'1.55')+' '+z.toFixed(2))}
 window.addEventListener('resize',fit);fit();
 })();
-</script></body></html>
+</script><script>
+(function(){var $=function(i){return document.getElementById(i)},L=$('left'),g=$('grabBtn'),s=$('scene'),z=$('gz');
+function setOpen(o){L.classList.toggle('open',o);g.setAttribute('aria-expanded',o);g.innerHTML=o?'&#9660;':'&#9650;'}
+g.onclick=function(){setOpen(!L.classList.contains('open'))};
+var tabs=[].slice.call(document.querySelectorAll('#tabs .tab'));
+tabs.forEach(function(b){b.onclick=function(){L.dataset.tab=b.dataset.t;tabs.forEach(function(x){x.classList.toggle('active',x===b)});setOpen(true)}});
+function step(d){var bs=[].slice.call(document.querySelectorAll('.layerBtn')),i=bs.findIndex(function(b){return b.classList.contains('active')});if(!bs.length)return;bs[i<0?(d>0?0:bs.length-1):(i+d+bs.length)%bs.length].click()}
+$('prevBtn').onclick=function(){step(-1)};$('nextBtn').onclick=function(){step(1)};
+new MutationObserver(function(){var a=document.querySelector('.layerBtn.active');if(a&&a.scrollIntoView)try{a.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}catch(e){}}).observe($('layerList'),{attributes:true,subtree:true,attributeFilter:['class']});
+setOpen(innerWidth>760);
+if(s&&z){s.addEventListener('enter-vr',function(){z.setAttribute('cursor','fuse:true;fuseTimeout:1200');z.setAttribute('visible',true)});
+s.addEventListener('exit-vr',function(){z.setAttribute('cursor','fuse:false');z.setAttribute('visible',false)})}
+})();
+</script>
+</body></html>
