@@ -166,7 +166,7 @@ button:disabled{opacity:.4;cursor:default}
  </a-entity>
  <a-ring id="reticle" visible="false" rotation="-90 0 0" radius-inner="0.12" radius-outer="0.16" material="shader:flat;color:#f6c76b;opacity:.9;side:double" position="0 0 -1"></a-ring>
  <a-camera id="camera" position="0 1.55 0.3" look-controls wasd-controls>
-  <a-entity id="gz" visible="false" cursor="fuse:false" raycaster="objects:.pickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.012;radiusOuter:0.022" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true"></a-entity>
+  <a-entity id="gz" visible="false" cursor="fuse:false" raycaster="objects:.pickable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:0.018;radiusOuter:0.032" material="color:#ffffff;shader:flat;opacity:0.9;transparent:true"></a-entity>
  </a-camera>
  <a-entity laser-controls="hand:right" raycaster="objects:.pickable;far:8"></a-entity>
 </a-scene>
@@ -191,7 +191,7 @@ var objects=[];
 function el(tag,attrs,parent){var n=document.createElement(tag);Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k])});(parent||yan).appendChild(n);return n}
 function line(a,b,z,layer,width){var dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);if(len<.001)return null;
  var n=el('a-box',{class:'pickable',position:((a[0]+b[0])/2)+' '+((a[1]+b[1])/2)+' '+z,rotation:'0 0 '+(Math.atan2(dy,dx)*180/Math.PI),width:len,height:width||.018,depth:.018,material:'shader:standard;color:'+layer.color+';metalness:.18;roughness:.5'},yan);
- n.dataset.basePos=[(a[0]+b[0])/2,(a[1]+b[1])/2,z].join(',');n.dataset.layer=layer.index;n.addEventListener('click',function(){select(layer.index)});objects.push(n);layer.items.push(n);return n}
+ n.dataset.basePos=[(a[0]+b[0])/2,(a[1]+b[1])/2,z].join(',');n.dataset.layer=layer.index;n.addEventListener('click',function(){select(layer.index)});n.addEventListener('mouseenter',function(){hover(layer,true)});n.addEventListener('mouseleave',function(){hover(layer,false)});objects.push(n);layer.items.push(n);return n}
 function polygon(points,z,layer,closed){for(var i=0;i<(closed?points.length:points.length-1);i++)line(points[i],points[(i+1)%points.length],z,layer)}
 function circle(r,z,layer){var pts=[];for(var i=0;i<96;i++){var a=i*Math.PI*2/96;pts.push([r*Math.cos(a),r*Math.sin(a)])}polygon(pts,z,layer,true)}
 function lotus(count,r0,r1,z,layer){circle(r0,z,layer);for(var i=0;i<count;i++){var a=i*2*Math.PI/count,h=Math.PI/count*.88;polygon([[r0*Math.cos(a-h),r0*Math.sin(a-h)],[r1*Math.cos(a),r1*Math.sin(a)],[r0*Math.cos(a+h),r0*Math.sin(a+h)]],z,layer,false)}}
@@ -212,11 +212,11 @@ var triSpecs=[
  {up:true,apex:.4,base:.12,half:.39,layer:6},{up:false,apex:-.4,base:-.12,half:.39,layer:6},
  {up:false,apex:-.23,base:.22,half:.23,layer:7}
 ];
-triSpecs.forEach(function(t){var l=layers[t.layer],pts=t.up?[[0,t.apex],[-t.half,t.base],[t.half,t.base]]:[[0,t.apex],[-t.half,t.base],[t.half,t.base]];polygon(pts,0,l,true);l.fills.push(el('a-entity',{geometry:'primitive:triangle;vertexA:'+pts[0].join(' ')+' 0;vertexB:'+pts[1].join(' ')+' 0;vertexC:'+pts[2].join(' ')+' 0',material:'shader:standard;color:'+l.color+';opacity:.28;transparent:true;side:double;depthWrite:false',position:'0 0 0'}))});
+triSpecs.forEach(function(t){var l=layers[t.layer],pts=t.up?[[0,t.apex],[-t.half,t.base],[t.half,t.base]]:[[0,t.apex],[-t.half,t.base],[t.half,t.base]];polygon(pts,0,l,true);(function(f){f.addEventListener('click',function(){select(l.index)});f.addEventListener('mouseenter',function(){hover(l,true)});f.addEventListener('mouseleave',function(){hover(l,false)});l.fills.push(f)})(el('a-entity',{class:'pickable',geometry:'primitive:triangle;vertexA:'+pts[0].join(' ')+' 0;vertexB:'+pts[1].join(' ')+' 0;vertexC:'+pts[2].join(' ')+' 0',material:'shader:standard;color:'+l.color+';opacity:.28;transparent:true;side:double;depthWrite:false',position:'0 0 0'}))});
 var bindu=el('a-sphere',{class:'pickable',radius:.055,position:'0 0 .04',material:'shader:standard;color:#fff2c4;emissive:#8d6c2d;emissiveIntensity:.35'},yan);bindu.dataset.basePos='0,0,0.04';bindu.dataset.layer=8;bindu.addEventListener('click',function(){select(8)});layers[8].items.push(bindu);objects.push(bindu);
 /* Meru teaching tiers are display geometry; each enclosure is a raised outline, not a claimed archaeological replica. */
 var radii=[1.42,1.2,1.0,.84,.68,.53,.39,.25,.1];
-layers.forEach(function(l,i){var r=radii[i],tier=el('a-box',{position:'0 0 0',width:r*2,height:r*2,depth:.035,material:'shader:standard;color:'+l.color+';opacity:.13;transparent:true;side:double'},yan);l.slab=tier});
+layers.forEach(function(l,i){var r=radii[i],tier=el('a-box',{class:'pickable',position:'0 0 0',width:r*2,height:r*2,depth:.035,material:'shader:standard;color:'+l.color+';opacity:.13;transparent:true;side:double'},yan);l.slab=tier;tier.addEventListener('click',function(){select(i)});tier.addEventListener('mouseenter',function(){hover(l,true)});tier.addEventListener('mouseleave',function(){hover(l,false)})});
 var axis=el('a-cylinder',{radius:.012,height:1,rotation:'90 0 0',material:'shader:flat;color:#f6c76b;opacity:.35;transparent:true'},yan);
 function renderLayers(){
  layers.forEach(function(l,i){
@@ -226,6 +226,7 @@ function renderLayers(){
  });
  if(axis){axis.setAttribute('position','0 0 '+(4*gap));axis.setAttribute('height',Math.max(.01,8*gap));axis.setAttribute('visible',exploded)}
 }
+function hover(l,on){l.fills.forEach(function(f){f.setAttribute('material','opacity',on?.5:(l.index===selected?.55:.28))});if(l.slab)l.slab.setAttribute('material','opacity',on?.3:.13)}
 function paint(){layers.forEach(function(l,i){l.fills.forEach(function(f){f.setAttribute('material','opacity',i===selected?.55:.28)});l.items.forEach(function(o){var active=i===selected;o.setAttribute('material','shader:standard;color:'+l.color+';emissive:'+(active?l.color:'#000000')+';emissiveIntensity:'+(active?.8:0));if(o.tagName==='A-BOX'){o.setAttribute('height',active?.03:.018);o.setAttribute('depth',active?.026:.018)}})})}
 function select(i){selected=i;isolated=false;renderLayers();paint();document.querySelectorAll('.layerBtn').forEach(function(btn){btn.classList.toggle('active',Number(btn.dataset.i)===i)});
  var d=$('detail');if(i<0){d.innerHTML='<h2>Explore the structure</h2><div class="sanskrit">Śrī Cakra / Śrī Yantra</div><h3>From the outer boundary to the bindu</h3><p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p><p class="note">Schematic study model: the triangles are drawn as simplified up/down pairs and the full 43-chamber construction is not shown.</p>';$('status').textContent='All enclosures visible';return}
@@ -255,7 +256,7 @@ $('legend').innerHTML=layers.map(function(l,i){return '<div><i style="background
 function elong(d){if(!exploded)setMode(true);gap=Math.min(GMAX,Math.max(GMIN,Math.round((gap+d)*1000)/1000));renderLayers();syncH();$('status').textContent='Meru height '+(8*gap).toFixed(2)+' units (illustrative)'}
 function syncH(){$('tallBtn').disabled=gap>=GMAX-.0005;$('shortBtn').disabled=gap<=GMIN+.0005}
 $('tallBtn').onclick=function(){elong(.03)};$('shortBtn').onclick=function(){elong(-.03)};$('hRst').onclick=function(){gap=GAP0;renderLayers();syncH();$('status').textContent='Meru height reset'};
-function applyTilt(){var xr=scene.is('ar-mode')||scene.is('vr-mode'),a=xr?0:(exploded?32:68),m=$('modelRoot');m.setAttribute('animation__tilt','property:rotation;to:'+a+' 0 0;dur:500;easing:easeInOutQuad');if(xr){m.removeAttribute('animation__lift')}else m.setAttribute('animation__lift','property:position;to:0 '+(0.7+1.45*Math.sin(a*Math.PI/180)).toFixed(2)+' -2.6;dur:500;easing:easeInOutQuad')}
+function applyTilt(){var ar=scene.is('ar-mode'),vr=scene.is('vr-mode')&&!ar,xr=ar,a=ar?0:(vr?(exploded?38:62):(exploded?32:68)),m=$('modelRoot');m.setAttribute('animation__tilt','property:rotation;to:'+a+' 0 0;dur:500;easing:easeInOutQuad');if(xr){m.removeAttribute('animation__lift')}else m.setAttribute('animation__lift','property:position;to:0 '+(0.7+1.45*Math.sin(a*Math.PI/180)).toFixed(2)+' -2.6;dur:500;easing:easeInOutQuad')}
 scene.addEventListener('enter-vr',applyTilt);scene.addEventListener('exit-vr',function(){setTimeout(applyTilt,60)});
 buildLayerButtons();select(-1);syncH();applyTilt();renderLayers();spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');
 function fit(){var cam=$('camera');if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,p=a<.9,z=p?Math.max(.3,Math.min(2.4,-2.6+1.7/(.839*a))):.3;cam.setAttribute('position','0 '+(p?'1.3':'1.55')+' '+z.toFixed(2))}
