@@ -26,7 +26,7 @@ remove:function(){this.el.removeObject3D('text')}});})();
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
 a-scene{position:fixed;inset:0}
-#top{position:fixed;z-index:8;top:env(safe-area-inset-top,10px);left:10px;right:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+#top{position:fixed;z-index:8;top:env(safe-area-inset-top,10px);left:10px;right:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none;bottom:auto;padding:0;overflow:visible}
 .brand,.toolbar,.panel,.bottom{pointer-events:auto}
 .brand{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:9px 13px;backdrop-filter:blur(12px)}
 .brand b{display:block;font-size:14px;letter-spacing:.04em}.brand span{font-size:11px;color:var(--muted)}
@@ -107,6 +107,9 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
  .pane{display:none;max-height:34vh;overflow:auto;box-shadow:none}
  #left[data-tab=detail] [data-pane=detail],#left[data-tab=controls] [data-pane=controls],#left[data-tab=notes] [data-pane=notes]{display:block}
 }
+@media(min-width:761px){#left{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}#left>*{flex-shrink:0}#detail{flex:0 0 auto}}
+button:disabled{opacity:.4;cursor:default}
+.legend{display:grid;gap:3px;margin-top:8px;font-size:11px;color:var(--muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 </style></head><body>
 <div id="top">
  <div class="brand"><b>ŚRĪ CAKRA · MERU LAB</b><span>Geometry • Nine Āvaraṇas • Immersive study</span></div>
@@ -114,6 +117,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <button id="viewBtn" class="active">Meru 3D</button>
   <button id="planBtn">2D Plan</button>
   <button id="explodeBtn">Explode</button>
+  <button id="tallBtn" title="Stretch the Meru upwards">▲ Taller Meru</button>
+  <button id="shortBtn" title="Compress the Meru">▼ Shorter</button>
   <button id="tourBtn">Guided tour</button>
   <button id="quizBtn">Knowledge check</button>
   <button id="arBtn" data-hide-mobile="1">Enter AR</button>
@@ -138,7 +143,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
  <section class="panel pane" data-pane="controls">
   <h2>Display controls</h2>
   <div class="row"><button id="allBtn">Show all</button><button id="soloBtn">Isolate selected</button><button id="spinBtn" class="active">Pause rotation</button></div>
-  <p>Model height and tier spacing are illustrative display parameters, not prescribed historical measurements.</p>
+  <div class="row"><button id="hRst">Reset height</button></div><p>Use <b>▲ Taller Meru</b> and <b>▼ Shorter</b> in the top toolbar to stretch or compress the Meru. Height and tier spacing are illustrative display parameters, not prescribed historical measurements.</p><h2 style="margin-top:10px">Colour key</h2><div id="legend" class="legend"></div>
  </section>
  <section class="panel pane" data-pane="notes">
   <h2>Geometry note</h2>
@@ -181,16 +186,20 @@ var layers=[
  {name:'Trikoṇa',plain:'Trikona',sanskrit:'Sarvasiddhiprada',form:'Central triangle',desc:'The innermost triangle surrounding the central point. Its orientation and details should be checked against the chosen lineage or reference tradition.',color:'#f2d17d'},
  {name:'Bindu',plain:'Bindu',sanskrit:'Sarvānandamaya',form:'Central point',desc:'The central point, or bindu, which is the focal centre of the diagram.',color:'#fff4ce'}
 ];
-var selected=-1, isolated=false, exploded=true, spinning=true, tourTimer=null, placed=false, hitSource=null, viewerSpace=null;
+var GAP0=.14,GMIN=.04,GMAX=.35,gap=GAP0,selected=-1, isolated=false, exploded=true, spinning=true, tourTimer=null, placed=false, hitSource=null, viewerSpace=null;
 var objects=[];
 function el(tag,attrs,parent){var n=document.createElement(tag);Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k])});(parent||yan).appendChild(n);return n}
 function line(a,b,z,layer,width){var dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);if(len<.001)return null;
  var n=el('a-box',{class:'pickable',position:((a[0]+b[0])/2)+' '+((a[1]+b[1])/2)+' '+z,rotation:'0 0 '+(Math.atan2(dy,dx)*180/Math.PI),width:len,height:width||.018,depth:.018,material:'shader:standard;color:'+layer.color+';metalness:.18;roughness:.5'},yan);
- n.dataset.layer=layer.index;n.addEventListener('click',function(){select(layer.index)});objects.push(n);layer.items.push(n);return n}
+ n.dataset.basePos=[(a[0]+b[0])/2,(a[1]+b[1])/2,z].join(',');n.dataset.layer=layer.index;n.addEventListener('click',function(){select(layer.index)});objects.push(n);layer.items.push(n);return n}
 function polygon(points,z,layer,closed){for(var i=0;i<(closed?points.length:points.length-1);i++)line(points[i],points[(i+1)%points.length],z,layer)}
 function circle(r,z,layer){var pts=[];for(var i=0;i<96;i++){var a=i*Math.PI*2/96;pts.push([r*Math.cos(a),r*Math.sin(a)])}polygon(pts,z,layer,true)}
 function lotus(count,r0,r1,z,layer){circle(r0,z,layer);for(var i=0;i<count;i++){var a=i*2*Math.PI/count,h=Math.PI/count*.88;polygon([[r0*Math.cos(a-h),r0*Math.sin(a-h)],[r1*Math.cos(a),r1*Math.sin(a)],[r0*Math.cos(a+h),r0*Math.sin(a+h)]],z,layer,false)}}
-layers.forEach(function(l,i){l.index=i;l.items=[];l.nodes=[];l.slab=null});
+var chakraSet=[
+ ['#ef4444','Mūlādhāra · root · red'],['#fb923c','Svādhiṣṭhāna · sacral · orange'],['#fde047','Maṇipūra · solar plexus · yellow'],
+ ['#4ade80','Anāhata · heart · green'],['#2dd4bf','Bridge shade · heart to throat · teal'],['#38bdf8','Viśuddha · throat · blue'],
+ ['#818cf8','Ājñā · third eye · indigo'],['#c084fc','Sahasrāra · crown · violet'],['#fff3c4','Beyond the seven · bindu · white-gold']];
+layers.forEach(function(l,i){l.index=i;l.items=[];l.fills=[];l.nodes=[];l.slab=null;l.color=chakraSet[i][0];l.chakra=chakraSet[i][1]});
 /* Plan-view teaching schematic. The nine-triangle network is intentionally marked as non-canonical. */
 var sq=1.32, b=layers[0];polygon([[-sq,-sq],[sq,-sq],[sq,sq],[-sq,sq]],0,b,true);polygon([[-sq+.07,-sq+.07],[sq-.07,-sq+.07],[sq-.07,sq-.07],[-sq+.07,sq-.07]],0,b,true);
 for(var g=0;g<4;g++){var gate=[[sq,.18],[sq+.14,.18],[sq+.14,-.18],[sq,-.18]].map(function(p){var a=g*Math.PI/2;return[p[0]*Math.cos(a)-p[1]*Math.sin(a),p[0]*Math.sin(a)+p[1]*Math.cos(a)]});polygon(gate,0,b,false)}
@@ -203,25 +212,27 @@ var triSpecs=[
  {up:true,apex:.4,base:.12,half:.39,layer:6},{up:false,apex:-.4,base:-.12,half:.39,layer:6},
  {up:false,apex:-.23,base:.22,half:.23,layer:7}
 ];
-triSpecs.forEach(function(t){var l=layers[t.layer],pts=t.up?[[0,t.apex],[-t.half,t.base],[t.half,t.base]]:[[0,t.apex],[-t.half,t.base],[t.half,t.base]];polygon(pts,0,l,true)});
-var bindu=el('a-sphere',{class:'pickable',radius:.055,position:'0 0 .04',material:'shader:standard;color:#fff2c4;emissive:#8d6c2d;emissiveIntensity:.35'},yan);bindu.dataset.layer=8;bindu.addEventListener('click',function(){select(8)});layers[8].items.push(bindu);objects.push(bindu);
+triSpecs.forEach(function(t){var l=layers[t.layer],pts=t.up?[[0,t.apex],[-t.half,t.base],[t.half,t.base]]:[[0,t.apex],[-t.half,t.base],[t.half,t.base]];polygon(pts,0,l,true);l.fills.push(el('a-entity',{geometry:'primitive:triangle;vertexA:'+pts[0].join(' ')+' 0;vertexB:'+pts[1].join(' ')+' 0;vertexC:'+pts[2].join(' ')+' 0',material:'shader:standard;color:'+l.color+';opacity:.28;transparent:true;side:double;depthWrite:false',position:'0 0 0'}))});
+var bindu=el('a-sphere',{class:'pickable',radius:.055,position:'0 0 .04',material:'shader:standard;color:#fff2c4;emissive:#8d6c2d;emissiveIntensity:.35'},yan);bindu.dataset.basePos='0,0,0.04';bindu.dataset.layer=8;bindu.addEventListener('click',function(){select(8)});layers[8].items.push(bindu);objects.push(bindu);
 /* Meru teaching tiers are display geometry; each enclosure is a raised outline, not a claimed archaeological replica. */
 var radii=[1.42,1.2,1.0,.84,.68,.53,.39,.25,.1];
 layers.forEach(function(l,i){var r=radii[i],tier=el('a-box',{position:'0 0 0',width:r*2,height:r*2,depth:.035,material:'shader:standard;color:'+l.color+';opacity:.13;transparent:true;side:double'},yan);l.slab=tier});
+var axis=el('a-cylinder',{radius:.012,height:1,rotation:'90 0 0',material:'shader:flat;color:#f6c76b;opacity:.35;transparent:true'},yan);
 function renderLayers(){
  layers.forEach(function(l,i){
-  var z=exploded?i*.075:0, show=(!isolated||selected<0||selected===i);
-  l.items.forEach(function(o){var p=o.dataset.basePos;if(!p){var a=o.getAttribute('position');o.dataset.basePos=[a.x,a.y,a.z].join(',')}var v=o.dataset.basePos.split(',').map(Number);o.setAttribute('position',v[0]+' '+v[1]+' '+(v[2]+z));o.setAttribute('visible',show)});
-  l.slab.setAttribute('position','0 0 '+(z-.035));l.slab.setAttribute('visible',show&&exploded);
+  var z=exploded?i*gap:0, show=(!isolated||selected<0||selected===i);
+  l.items.forEach(function(o){var p=o.dataset.basePos;if(!p){var a=o.getAttribute('position');if(typeof a==='string'){var q=a.trim().split(/\s+/).map(Number);a={x:q[0]||0,y:q[1]||0,z:q[2]||0}}o.dataset.basePos=[a.x,a.y,a.z].join(',')}var v=o.dataset.basePos.split(',').map(Number);o.setAttribute('position',v[0]+' '+v[1]+' '+(v[2]+z));o.setAttribute('visible',show)});
+  l.slab.setAttribute('position','0 0 '+(z-.035));l.slab.setAttribute('visible',show&&exploded);l.fills.forEach(function(f){f.setAttribute('position','0 0 '+(z+.002+i*.0015));f.setAttribute('visible',show)});
  });
+ if(axis){axis.setAttribute('position','0 0 '+(4*gap));axis.setAttribute('height',Math.max(.01,8*gap));axis.setAttribute('visible',exploded)}
 }
-function paint(){layers.forEach(function(l,i){l.items.forEach(function(o){var active=i===selected;o.setAttribute('material','shader:standard;color:'+(active?'#fff8df':l.color)+';emissive:'+(active?'#5d4720':'#000000')+';emissiveIntensity:'+(active?.45:0));if(o.tagName==='A-BOX'){o.setAttribute('height',active?.03:.018);o.setAttribute('depth',active?.026:.018)}})})}
+function paint(){layers.forEach(function(l,i){l.fills.forEach(function(f){f.setAttribute('material','opacity',i===selected?.55:.28)});l.items.forEach(function(o){var active=i===selected;o.setAttribute('material','shader:standard;color:'+l.color+';emissive:'+(active?l.color:'#000000')+';emissiveIntensity:'+(active?.8:0));if(o.tagName==='A-BOX'){o.setAttribute('height',active?.03:.018);o.setAttribute('depth',active?.026:.018)}})})}
 function select(i){selected=i;isolated=false;renderLayers();paint();document.querySelectorAll('.layerBtn').forEach(function(btn){btn.classList.toggle('active',Number(btn.dataset.i)===i)});
  var d=$('detail');if(i<0){d.innerHTML='<h2>Explore the structure</h2><div class="sanskrit">Śrī Cakra / Śrī Yantra</div><h3>From the outer boundary to the bindu</h3><p>Select an enclosure to inspect its geometric form and commonly transmitted name. Use the 2D plan to study the layout, or Meru 3D to explore a stepped representation.</p><p class="note">Schematic study model: the triangles are drawn as simplified up/down pairs and the full 43-chamber construction is not shown.</p>';$('status').textContent='All enclosures visible';return}
- var l=layers[i],outer=i>0?layers[i-1].name:'none (outermost)',inner=i<8?layers[i+1].name:'none (the centre)';d.innerHTML='<div class="kicker">Enclosure '+(i+1)+' of 9</div><div class="pips">'+layers.map(function(x,k){return '<i class="'+(k===i?'on':k<i?'past':'')+'" style="--c:'+x.color+'"></i>'}).join('')+'</div><h3>'+l.name+'<span>'+l.plain+'</span></h3><div class="sanskrit">'+l.sanskrit+'</div><div class="chips2"><span><b>Form</b>'+l.form+'</span><span><b>Outside</b>'+outer+'</span><span><b>Inside</b>'+inner+'</span></div><p>'+l.desc+'</p><p class="note">Names and explanatory translations can vary by textual or ritual source. This page presents a study sequence, not ritual instruction.</p>'+(i>=3&&i<=7?'<p class="note">Here this enclosure is drawn as a simplified triangle pair. The traditional counts (14, 10, 10, 8) come from the intersections of all nine triangles, which this schematic does not show.</p>':'');$('status').textContent='Selected: '+l.plain}
+ var l=layers[i],outer=i>0?layers[i-1].name:'none (outermost)',inner=i<8?layers[i+1].name:'none (the centre)';d.innerHTML='<div class="kicker">Enclosure '+(i+1)+' of 9</div><div class="pips">'+layers.map(function(x,k){return '<i class="'+(k===i?'on':k<i?'past':'')+'" style="--c:'+x.color+'"></i>'}).join('')+'</div><h3>'+l.name+'<span>'+l.plain+'</span></h3><div class="sanskrit">'+l.sanskrit+'</div><div class="chips2"><span><b>Form</b>'+l.form+'</span><span><b>Outside</b>'+outer+'</span><span><b>Inside</b>'+inner+'</span><span><b>Chakra colour</b>'+l.chakra+'</span></div><p>'+l.desc+'</p><p class="note">Names and explanatory translations can vary by textual or ritual source. This page presents a study sequence, not ritual instruction.</p><p class="note">Colour is a learning aid: seven chakra colours, one bridge shade and the white-gold bindu. Traditions differ on how enclosures relate to chakras.</p>'+(i>=3&&i<=7?'<p class="note">Here this enclosure is drawn as a simplified triangle pair. The traditional counts (14, 10, 10, 8) come from the intersections of all nine triangles, which this schematic does not show.</p>':'');$('status').textContent='Selected: '+l.plain}
 function buildLayerButtons(){var host=$('layerList');layers.forEach(function(l,i){var b=document.createElement('button');b.className='layerBtn';b.dataset.i=i;b.innerHTML='<i class="dot" style="background:'+l.color+'"></i>'+(i+1)+'. '+l.name+'<small>'+l.form+'</small>';b.onclick=function(){select(i)};host.appendChild(b)})}
-function setMode(is3d){exploded=is3d;$('viewBtn').classList.toggle('active',is3d);$('planBtn').classList.toggle('active',!is3d);renderLayers();$('status').textContent=is3d?'Meru-style stepped study view':'Plan view · all enclosures on one plane';}
-function toggleExplode(){exploded=!exploded;$('explodeBtn').classList.toggle('active',exploded);renderLayers();$('status').textContent=exploded?'Tier separation enabled':'Tier separation collapsed'}
+function setMode(is3d){exploded=is3d;applyTilt();$('viewBtn').classList.toggle('active',is3d);$('planBtn').classList.toggle('active',!is3d);renderLayers();$('status').textContent=is3d?'Meru-style stepped study view':'Plan view · all enclosures on one plane';}
+function toggleExplode(){exploded=!exploded;applyTilt();$('explodeBtn').classList.toggle('active',exploded);renderLayers();$('status').textContent=exploded?'Tier separation enabled':'Tier separation collapsed'}
 function toggleSolo(){isolated=!isolated;renderLayers();$('soloBtn').classList.toggle('active',isolated);$('status').textContent=isolated?'Isolating selected enclosure':'All enclosures visible'}
 function tour(){if(tourTimer){clearInterval(tourTimer);tourTimer=null;$('tourBtn').classList.remove('active');$('status').textContent='Guided tour paused';return}select(0);$('tourBtn').classList.add('active');tourTimer=setInterval(function(){select((selected+1)%9)},3200);$('status').textContent='Guided tour · moving from outside inward'}
 function quiz(){var questions=[
@@ -240,7 +251,13 @@ scene.addEventListener('exit-vr',function(){viewerSpace=null;hitSource=null;$('a
 $('arBtn').onclick=function(){if(!navigator.xr||!navigator.xr.isSessionSupported){alert('WebXR AR is not available in this browser. Try a supported Android device and Chrome over HTTPS.');return}navigator.xr.isSessionSupported('immersive-ar').then(function(ok){if(!ok){alert('This device/browser does not report immersive-ar support.');return}scene.enterAR().catch(function(e){alert('Could not start AR: '+e.message)})})};
 $('vrBtn').onclick=function(){if(!navigator.xr){alert('WebXR is not available in this browser.');return}scene.enterVR().catch(function(e){alert('Could not start VR: '+e.message)})};
 $('viewBtn').onclick=function(){setMode(true)};$('planBtn').onclick=function(){setMode(false)};$('explodeBtn').onclick=toggleExplode;$('tourBtn').onclick=tour;$('quizBtn').onclick=quiz;$('allBtn').onclick=function(){isolated=false;select(-1);renderLayers()};$('soloBtn').onclick=toggleSolo;$('spinBtn').onclick=toggleSpin;$('closeModal').onclick=function(){$('modal').classList.remove('show')};$('modal').addEventListener('click',function(e){if(e.target===$('modal'))$('modal').classList.remove('show')});
-buildLayerButtons();select(-1);renderLayers();spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');
+$('legend').innerHTML=layers.map(function(l,i){return '<div><i style="background:'+l.color+'"></i>'+(i+1)+'. '+l.name+' — '+l.chakra+'</div>'}).join('');
+function elong(d){if(!exploded)setMode(true);gap=Math.min(GMAX,Math.max(GMIN,Math.round((gap+d)*1000)/1000));renderLayers();syncH();$('status').textContent='Meru height '+(8*gap).toFixed(2)+' units (illustrative)'}
+function syncH(){$('tallBtn').disabled=gap>=GMAX-.0005;$('shortBtn').disabled=gap<=GMIN+.0005}
+$('tallBtn').onclick=function(){elong(.03)};$('shortBtn').onclick=function(){elong(-.03)};$('hRst').onclick=function(){gap=GAP0;renderLayers();syncH();$('status').textContent='Meru height reset'};
+function applyTilt(){var xr=scene.is('ar-mode')||scene.is('vr-mode'),a=xr?0:(exploded?32:68),m=$('modelRoot');m.setAttribute('animation__tilt','property:rotation;to:'+a+' 0 0;dur:500;easing:easeInOutQuad');if(xr){m.removeAttribute('animation__lift')}else m.setAttribute('animation__lift','property:position;to:0 '+(0.7+1.45*Math.sin(a*Math.PI/180)).toFixed(2)+' -2.6;dur:500;easing:easeInOutQuad')}
+scene.addEventListener('enter-vr',applyTilt);scene.addEventListener('exit-vr',function(){setTimeout(applyTilt,60)});
+buildLayerButtons();select(-1);syncH();applyTilt();renderLayers();spinRoot.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:50000;easing:linear');
 function fit(){var cam=$('camera');if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,p=a<.9,z=p?Math.max(.3,Math.min(2.4,-2.6+1.7/(.839*a))):.3;cam.setAttribute('position','0 '+(p?'1.3':'1.55')+' '+z.toFixed(2))}
 window.addEventListener('resize',fit);fit();
 })();
