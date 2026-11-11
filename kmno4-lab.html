@@ -22,9 +22,9 @@ this.mesh.position.x=d.anchor==='left'?d.width/2:d.anchor==='right'?-d.width/2:0
 remove:function(){this.el.removeObject3D('text')}});})();
 </script>
 <style>
-:root{--panel:rgba(255,255,255,.92);--fg:#0f172a;--ac:#0369a1;--line:#cbd5e1}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--panel:rgba(15,23,42,.9);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}}
-:root[data-theme="dark"]{--panel:rgba(15,23,42,.9);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}
+:root{--solid:#ffffff;--panel:rgba(255,255,255,.92);--fg:#0f172a;--ac:#0369a1;--line:#cbd5e1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--solid:#0f172a;--panel:rgba(15,23,42,.9);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}}
+:root[data-theme="dark"]{--solid:#0f172a;--panel:rgba(15,23,42,.9);--fg:#e2e8f0;--ac:#38bdf8;--line:#334155}
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 #bar{position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:5;display:flex;gap:8px;flex-wrap:wrap}
@@ -33,7 +33,7 @@ html,body{margin:0;height:100%;background:#0b1020;font-family:system-ui,-apple-s
 .btn.on{background:var(--ac);color:#fff}
 #eq{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.5}
 #eq small{opacity:.75}
-#rp{position:fixed;right:10px;top:calc(120px + env(safe-area-inset-top,0px));width:min(380px,calc(100% - 20px));max-height:50vh;overflow:auto;z-index:6;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;display:none}#rp table{border-collapse:collapse;width:100%}#rp td{border-top:1px solid var(--line);padding:3px 6px}#rp select{font-size:13px;max-width:100%}#rp details{margin:4px 0}
+#rp{position:fixed;z-index:6;background:var(--solid);color:var(--fg);border:1px solid var(--line);padding:0 12px 10px;font-size:13px;line-height:1.5;overflow:auto;display:none}#rp .hd{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;background:var(--solid);border-bottom:1px solid var(--line);margin-bottom:6px}#rp select{max-width:100%}@media(min-width:700px) and (orientation:landscape){#rp{right:0;top:0;bottom:0;width:380px;border-width:0 0 0 1px;border-radius:0}body.dock #bar,body.dock #eq{right:390px}body.dock #eq{font-size:12px;padding:6px 10px}body.dock #eq small{display:none}}@media(max-width:699px),(orientation:portrait){#rp{left:0;right:0;bottom:0;max-height:42vh;border-width:1px 0 0;border-radius:14px 14px 0 0}}#rp table{border-collapse:collapse;width:100%}#rp td{border-top:1px solid var(--line);padding:3px 6px}#rp select{font-size:13px;max-width:100%}#rp details{margin:4px 0}
 .a-enter-vr,.a-enter-ar{display:none!important}
 @media(max-width:600px){.btn{padding:7px 10px;font-size:13px}#eq{font-size:13px;padding:8px 10px}}
 </style></head><body>
@@ -179,7 +179,7 @@ acid:{n:'Acid medium · Fe²⁺ (Mn +7 → +2)',eq:'MnO₄⁻ + 8H⁺ + 5Fe²⁺
  obs:['Deep purple fades to nearly colourless; dilute Mn²⁺ solutions may look very pale pink.','Acid is required: H⁺ participates in the reduction half-reaction.'],
  q:[['Which species is the oxidising agent?','MnO₄⁻, because Mn goes from +7 to +2.'],['How many Fe²⁺ ions does one MnO₄⁻ oxidise?','Five: each permanganate ion gains 5 electrons and each Fe²⁺ loses 1.'],['Why is the product nearly colourless?','Dilute Mn²⁺ solution is very faintly pink.']]},
 base:{n:'Strongly alkaline · sulfite → manganate (Mn +7 → +6)',eq:'2MnO₄⁻ + SO₃²⁻ + 2OH⁻ → 2MnO₄²⁻ + SO₄²⁻ + H₂O',
- h:['Reduction: MnO₄⁻ + e⁻ → MnO₄²⁻','Oxidation: SO₃²⁻ + 2OH⁻ → SO₄²⁻ + H₂O + 2e⁻','Multiply the Mn half-reaction by 2; 2 electrons are transferred.','Charge check: −4 = −4'],
+ h:['Reduction: MnO₄⁻ + e⁻ → MnO₄²⁻','Oxidation: SO₃²⁻ + 2OH⁻ → SO₄²⁻ + H₂O + 2e⁻','Multiply the Mn half-reaction by 2; 2 electrons are transferred.','Charge check: −6 = −6'],
  os:[['Mn','+7','+6','gains 1 e⁻ · reduced · green manganate'],['S','+4','+6','loses 2 e⁻ · oxidised · reducing agent']],
  obs:['Purple permanganate changes to green manganate, MnO₄²⁻, under strongly alkaline conditions.','This is a distinct condition-dependent outcome; do not automatically show brown MnO₂ as the next stage.'],
  q:[['What is the oxidation state of Mn in green manganate?','+6.'],['How many electrons does each MnO₄⁻ gain?','One electron.'],['What happens to sulfite?','Sulfur is oxidised from +4 in SO₃²⁻ to +6 in SO₄²⁻.']]},
@@ -220,7 +220,7 @@ permNeutralI:{n:'KMnO₄ · neutral / faintly alkaline KI · iodate',eq:'2MnO₄
  q:[['Why is the manganese product different from the acidic reaction?','The medium changes the reduction product: MnO₂ forms instead of Mn²⁺.'],['What is the iodine product?','Iodate, IO₃⁻.']]},
 permThio:{n:'KMnO₄ · neutral / faintly alkaline thiosulphate',eq:'8MnO₄⁻ + 3S₂O₃²⁻ + H₂O → 8MnO₂(s) + 6SO₄²⁻ + 2OH⁻',
  h:['Permanganate reduction: MnO₄⁻ → MnO₂ (Mn +7 → +4)','Thiosulphate is oxidised to sulphate (overall 24 e⁻ transferred).','Balanced overall ionic equation as shown.'],
- os:[['Mn','+7','+4','reduced to brown MnO₂'],['S','mixed','+6','both sulphur atoms end in sulphate']],
+ os:[['Mn','+7','+4','reduced to brown MnO₂'],['S','+2 (average)','+6','both sulphur atoms end in sulphate']],
  obs:['Purple permanganate gives brown MnO₂ precipitate.','Thiosulphate is oxidised almost quantitatively to sulphate, as stated in NCERT.'],
  q:[['What is the manganese reduction product?','MnO₂, with Mn in +4 oxidation state.'],['What is the final sulphur-containing ion?','SO₄²⁻.']]},
 permMn2:{n:'KMnO₄ · manganous ion · MnO₂ formation',eq:'2MnO₄⁻ + 3Mn²⁺ + 2H₂O → 5MnO₂(s) + 4H⁺',
@@ -251,12 +251,12 @@ dichSn:{n:'K₂Cr₂O₇ · acidified Sn²⁺ · Sn⁴⁺',eq:'Cr₂O₇²⁻ + 
 var rp=document.createElement('div');rp.id='rp';document.body.appendChild(rp);
 function sel(k){var r=RX[k];
  var groups=[['KMnO₄ · existing core pathways',['acid','base','neutral','ox']],['KMnO₄ · additional NCERT pathways',['permI','permH2S','permSO3','permNO2','permNeutralI','permThio','permMn2']],['K₂Cr₂O₇ · acidic medium',['dichFe','dichI','dichH2S','dichSn']]];
- rp.innerHTML='<b>Lab notes · choose oxidising agent / reagent</b> <select id="rs">'+groups.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(x){return '<option value="'+x+'"'+(x===k?' selected':'')+'>'+RX[x].n+'</option>'}).join('')+'</optgroup>'}).join('')+'</select> <button class="btn" id="rr">Run selected reaction</button>'+
+ rp.innerHTML='<div class="hd"><b>Lab notes</b><button class="btn" id="rx">Hide ✕</button></div><b>Choose oxidising agent / reagent</b> <select id="rs">'+groups.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(x){return '<option value="'+x+'"'+(x===k?' selected':'')+'>'+RX[x].n+'</option>'}).join('')+'</optgroup>'}).join('')+'</select> <button class="btn" id="rr">Run selected reaction</button>'+
  '<p><b>Balanced equation</b><br>'+r.eq+'<br><small>'+r.h.join('<br>')+'</small></p>'+
- '<p><b>Oxidation states</b> · live Mn in the beaker: <b id="os">+7</b></p><table>'+r.os.map(function(o){return '<tr><td>'+o[0]+'</td><td>'+o[1]+' → '+o[2]+'</td><td>'+o[3]+'</td></tr>'}).join('')+'</table>'+
+ '<p><b>Oxidation states</b> · live metal oxidation state in the beaker: <b id="os">+7</b></p><table>'+r.os.map(function(o){return '<tr><td>'+o[0]+'</td><td>'+o[1]+' → '+o[2]+'</td><td>'+o[3]+'</td></tr>'}).join('')+'</table>'+
  '<p><b>Observations</b></p><ul>'+r.obs.map(function(o){return '<li>'+o+'</li>'}).join('')+'</ul><p><b>Questions</b> (tap to reveal)</p>'+
  r.q.map(function(q){return '<details><summary>'+q[0]+'</summary>'+q[1]+'</details>'}).join('')+'<hr><b>NCERT checkpoints</b><ul><li><b>Acidified KMnO₄:</b> MnO₄⁻ is generally reduced to Mn²⁺. Use H₂SO₄ for acidification; HCl can also be oxidised to chlorine, interfering with the reaction.</li><li><b>Neutral / faintly alkaline KMnO₄:</b> MnO₄⁻ is reduced to brown MnO₂; the co-reactant determines the oxidation product.</li><li><b>Strongly alkaline KMnO₄:</b> selected reductions can give green manganate, MnO₄²⁻ (Mn +6).</li><li><b>Acidified K₂Cr₂O₇:</b> Cr₂O₇²⁻ is reduced to green Cr³⁺ (Cr +3). Chromate (yellow) and dichromate (orange) interconvert with pH.</li><li><b>Safety:</b> Cr(VI) compounds are toxic and carcinogenic; H₂S is acutely toxic. These pathways are virtual learning models, not experimental instructions.</li></ul><small>Content basis: NCERT Chemistry XII, Chapter 4, “The d- and f-Block Elements”, sections on potassium dichromate and potassium permanganate. <a href="https://ncert.nic.in/textbook/pdf/lech104.pdf" target="_blank" rel="noopener">Open NCERT chapter PDF</a>.</small>';
- $('rs').onchange=function(){sel(this.value)};
+ $('rs').onchange=function(){sel(this.value)};if(rp.style.display==='block')requestAnimationFrame(layout);
  $('rr').onclick=function(){var x=$('rs').value,core={acid:acid,base:base,neutral:neutral,ox:oxalic};if(core[x])core[x]();else runAdditional(x)}}
 var ADD_VIZ={
 permI:{start:'#7a1fa2',end:'#f8f3e8',label:'Mn²⁺ formed · iodine brown',color:'#8b4513',eq:'Purple MnO₄⁻ → pale Mn²⁺; iodine gives brown solution'},
@@ -272,13 +272,22 @@ dichH2S:{start:'#e87516',end:'#3b9b69',label:'Cr³⁺ · sulphur yellow',color:'
 dichSn:{start:'#e87516',end:'#3b9b69',label:'Cr³⁺ · Cr +3 (green)',color:'#93c5fd',eq:'Orange Cr₂O₇²⁻ → green Cr³⁺; Sn⁴⁺ forms'}
 };
 function runAdditional(k){var v=ADD_VIZ[k],r=RX[k];if(!v||busy)return;reset();busy=true;var tk=token;var dich=k.indexOf('dich')===0;
- cur.c=dich?[232,117,22]:[122,31,162];cur.o=.85;paint();setMolecule(dich?'cr2o7':'mno4');$('mnT').setAttribute('value',dich?'Cr₂O₇²⁻ · Cr +6 (orange)':'MnO₄⁻ · Mn +7 (purple)');
+ cur.c=dich?[232,117,22]:[122,31,162];cur.o=.85;paint();setMolecule(dich?'cr2o7':'mno4');if($('os'))$('os').textContent=dich?'+6':'+7';$('mnT').setAttribute('value',dich?'Cr₂O₇²⁻ · Cr +6 (orange)':'MnO₄⁻ · Mn +7 (purple)');
  $('eq3d').setAttribute('value',r.eq);say('Adding selected reagent ...',r.eq,'<b>'+r.n+'</b><br><small>Virtual reaction pathway. Read the balanced ionic equation and observations in Lab notes.</small>');
  drops(.45,v.color,function(){tween(dich?[59,155,105]:(k==='permNeutralI'||k==='permThio'||k==='permMn2'?[107,68,35]:[238,235,240]),.75,2600,tk,function(){
  if(dich)mn('#3b9b69','Cr³⁺ · Cr +3 (green)');else if(k==='permNeutralI'||k==='permThio'||k==='permMn2')mn('#6b4423','MnO₂ · Mn +4 (brown solid)');else mn('#f9a8d4','Mn²⁺ · Mn +2 (hydrated ion)');
  $('mnT').setAttribute('value',v.label);$('info').setAttribute('value',v.eq);say('Reaction pathway completed',r.eq,'<b>'+r.n+'</b><br><small>'+v.eq+'. See the Lab notes for half-reactions, oxidation states, observations and questions.</small>');busy=false;});});
 }
-var nb=document.createElement('button');nb.className='btn pri';nb.textContent='Reaction explorer';nb.onclick=function(){rp.style.display=rp.style.display==='block'?'none':'block'};$('bar').appendChild(nb);
+function showRP(v){rp.style.display=v?'block':'none';document.body.classList.toggle('dock',v);layout()}
+function layout(){var c=$('cam'),c3=c&&c.getObject3D&&c.getObject3D('camera');if(!c3||!c3.setViewOffset)return;
+ var W=innerWidth,H=innerHeight,open=rp.style.display==='block'&&!scene.is('vr-mode');
+ if(!open){c3.clearViewOffset();c3.updateProjectionMatrix();fit();return}
+ var side=W>=700&&W>H,dx=side?rp.offsetWidth:0,dy=side?$('eq').offsetHeight:rp.offsetHeight;
+ c3.setViewOffset(W,H,dx/2,dy/2,W,H);c3.updateProjectionMatrix();fit()}
+rp.addEventListener('click',function(e){if(e.target.id==='rx')showRP(false)});
+scene.addEventListener('enter-vr',layout);scene.addEventListener('exit-vr',layout);
+addEventListener('resize',function(){setTimeout(layout,60)});addEventListener('orientationchange',function(){setTimeout(layout,350)});
+var nb=document.createElement('button');nb.className='btn pri';nb.textContent='Reaction explorer';nb.onclick=function(){showRP(rp.style.display!=='block')};$('bar').appendChild(nb);
 sel('acid');
 var HOME='<b>Virtual KMnO₄ and K₂Cr₂O₇ redox laboratory.</b> Choose an oxidising agent and reaction pathway in Lab notes. KMnO₄ pathways cover acidic, neutral and alkaline media; K₂Cr₂O₇ pathways are shown in acidic medium. Tap reagent bottles for details; use “Heat” only for the oxalic-acid demonstration.<br><small>Virtual demonstration only. Dichromate contains toxic Cr(VI), and H₂S is highly toxic. Do not attempt these reactions from this simulation. Any real laboratory work must follow the institution’s approved risk assessment, trained supervision, PPE and hazardous-waste procedures.</small>';
 function reset(){token++;busy=false;clearInterval(tI);cur={c:PURPLE.slice(),o:.85};paint();
@@ -354,7 +363,7 @@ ar.onclick=function(){if(typeof scene.enterAR!=='function'){alert('3D engine not
 function room(v){['sky','floor'].forEach(function(i){$(i).setAttribute('visible',v)})}
 scene.addEventListener('enter-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',true);$('cam').setAttribute('position','0 1.5 0.4');room(!scene.is('ar-mode'))});
 scene.addEventListener('exit-vr',function(){var g=$('gaze');if(g)g.setAttribute('visible',false);fit();room(true)});
-var cam=$('cam');function fit(){if(scene.is('vr-mode'))return;var a=innerWidth/innerHeight,z=Math.max(.4,Math.min(3.2,-1.5+1.35/(.839*a)));cam.setAttribute('position','0 1.5 '+z.toFixed(2))}
+var cam=$('cam');function fit(){if(scene.is('vr-mode'))return;var dk=rp.style.display==='block'&&innerWidth>=700&&innerWidth>innerHeight?rp.offsetWidth:0,a=(innerWidth-dk)/innerHeight*(dk?.85:1),z=Math.max(.4,Math.min(3.2,-1.5+1.35/(.839*a)));cam.setAttribute('position','0 1.5 '+z.toFixed(2))}
 addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});fit();
 reset();
 }
